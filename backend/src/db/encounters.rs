@@ -38,8 +38,9 @@ pub struct Verdict<'a> {
 /// being scored, which is how two phones reporting the same encounter end up
 /// with exactly one evaluation.
 ///
-/// Failed or abandoned evaluations can be reclaimed, and fizzled pairs are
-/// re-scored once either profile changed after the verdict.
+/// Failed (after a short cooldown) or abandoned evaluations can be
+/// reclaimed, and fizzled pairs are re-scored once either profile changed
+/// after the verdict.
 pub async fn claim(
     db: &PgPool,
     user_a: Uuid,
@@ -52,7 +53,8 @@ pub async fn claim(
         VALUES ($1, $2)
         ON CONFLICT (user_a, user_b) DO UPDATE
         SET status = 'scoring', updated_at = now()
-        WHERE encounters.status = 'failed'
+        WHERE (encounters.status = 'failed'
+               AND encounters.updated_at < now() - INTERVAL '30 seconds')
            OR (encounters.status = 'scoring'
                AND encounters.updated_at < now() - INTERVAL '2 minutes')
            OR (encounters.status = 'fizzled' AND encounters.updated_at < $3)
