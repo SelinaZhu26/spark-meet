@@ -7,7 +7,7 @@
  * run background location, so there Spark only works while the app is open.
  */
 
-import Constants, { ExecutionEnvironment } from 'expo-constants';
+import { isRunningInExpoGo } from 'expo';
 import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
 import { AppState } from 'react-native';
@@ -25,7 +25,7 @@ const HEARTBEAT_MS = 45_000;
 
 export type PresenceMode = 'background' | 'foreground';
 
-const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
+const isExpoGo = isRunningInExpoGo();
 
 let lastLocation: Location.LocationObject | null = null;
 let lastPingAt = 0;

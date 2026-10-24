@@ -1,4 +1,5 @@
-import Constants, { ExecutionEnvironment } from 'expo-constants';
+import { isRunningInExpoGo } from 'expo';
+import Constants from 'expo-constants';
 import * as Device from 'expo-device';
 import { AppState, Platform } from 'react-native';
 
@@ -16,7 +17,7 @@ type NotificationsModule = typeof import('expo-notifications');
 // and the package loads them on import, so it can't be imported there at
 // all. Notifications are then no-ops; the in-app buzz still works.
 const Notifications: NotificationsModule | null =
-  Platform.OS === 'android' && Constants.executionEnvironment === ExecutionEnvironment.StoreClient
+  Platform.OS === 'android' && isRunningInExpoGo()
     ? null
     : // eslint-disable-next-line @typescript-eslint/no-require-imports
       require('expo-notifications');
