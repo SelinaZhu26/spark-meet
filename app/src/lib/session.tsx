@@ -2,7 +2,7 @@ import type { Session } from '@supabase/supabase-js';
 import { createContext, use, useCallback, useEffect, useState, type ReactNode } from 'react';
 
 import { api, errorMessage } from '@/lib/api';
-import { stopPresence } from '@/lib/presence';
+import { stopLocationUpdates, stopPresence } from '@/lib/presence';
 import { supabase } from '@/lib/supabase';
 import type { Me } from '@/lib/types';
 
@@ -34,7 +34,13 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     });
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, next) => setSession(next));
+    } = supabase.auth.onAuthStateChange((_event, next) => {
+      setSession(next);
+      if (!next) {
+        // Covers expired or revoked sessions too, not just signOut().
+        stopLocationUpdates().catch(() => {});
+      }
+    });
     return () => subscription.unsubscribe();
   }, []);
 
@@ -64,6 +70,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     if (me?.profile.active) {
       await stopPresence().catch(() => {});
     }
+    // This device's push token must not keep notifying the old account.
+    await api.setPushToken(null).catch(() => {});
     setError(null);
     await supabase.auth.signOut();
   }, [me]);

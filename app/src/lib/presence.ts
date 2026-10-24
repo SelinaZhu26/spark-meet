@@ -84,8 +84,9 @@ async function report(location: Location.LocationObject, force = false) {
       deliver(sparks);
     }
   } catch (error) {
-    if (error instanceof ApiError && error.status === 409) {
-      await stopUpdates();
+    if (error instanceof ApiError && (error.status === 409 || error.status === 401)) {
+      // Switched off elsewhere, or signed out: stop burning GPS.
+      await stopLocationUpdates();
       stopListeners.forEach((listener) => listener());
     } else {
       console.warn('[spark] ping failed', error);
@@ -110,14 +111,20 @@ export async function startPresence(): Promise<PresenceMode> {
     throw new Error("Spark needs your location to know when someone's nearby.");
   }
   await api.setPresence(true);
-  const mode = await startUpdates(true);
-  const current = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
-  await report(current, true);
-  return mode;
+  try {
+    const mode = await startUpdates(true);
+    const current = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+    await report(current, true);
+    return mode;
+  } catch (error) {
+    // Don't leave the server thinking we're on with nothing reporting.
+    await stopPresence().catch(() => {});
+    throw error;
+  }
 }
 
 export async function stopPresence() {
-  await stopUpdates();
+  await stopLocationUpdates();
   await api.setPresence(false);
 }
 
@@ -166,7 +173,8 @@ async function startUpdates(prompt: boolean): Promise<PresenceMode> {
   return 'foreground';
 }
 
-async function stopUpdates() {
+/** Stops reporting locally without telling the backend. */
+export async function stopLocationUpdates() {
   watcher?.remove();
   watcher = null;
   if (heartbeat) {
