@@ -1,18 +1,26 @@
 #!/usr/bin/env node
 // A fake second user, for testing Spark with one phone.
 //
-//   node scripts/fake-neighbor.mjs <latitude> <longitude> [--interests "Bouldering,Jazz"]
+//   node scripts/fake-neighbor.mjs [latitude longitude] [--interests "Bouldering,Jazz"]
 //
 // Signs in (or signs up) a bot account, gives it a profile, switches Spark on
-// and pings from the given spot every 20 s. It waves at every spark it gets
-// and replies to chat messages. Ctrl+C switches it off again.
+// and pings every 20 s. Without coordinates it stands wherever your phone
+// last pinged, read straight from the pings database (dev only: the API
+// never returns locations). It waves at every spark it gets and replies to
+// chat messages. Ctrl+C switches it off again.
 //
-// Reads EXPO_PUBLIC_* from app/.env; BOT_EMAIL / BOT_PASSWORD override the
-// bot account.
+// Reads EXPO_PUBLIC_* from app/.env and the database URL from backend/.env;
+// BOT_EMAIL / BOT_PASSWORD override the bot account.
 
+import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 
-const env = { ...readEnv(new URL('../app/.env', import.meta.url)), ...process.env };
+const env = {
+  ...readEnv(new URL('../backend/.env', import.meta.url)),
+  ...readEnv(new URL('../app/.env', import.meta.url)),
+  ...process.env,
+};
+const PINGS_DATABASE_URL = env.PINGS_DATABASE_URL ?? env.DATABASE_URL;
 const SUPABASE_URL = env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 const API_URL = (env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8080').replace(/\/$/, '');
@@ -21,22 +29,19 @@ const PASSWORD = env.BOT_PASSWORD ?? 'spark-neighbor-bot';
 const PING_MS = 20_000;
 
 const args = process.argv.slice(2);
-const [latitude, longitude] = args.slice(0, 2).map(Number);
+const fixed = Number.isFinite(Number(args[0])) && Number.isFinite(Number(args[1]))
+  ? { latitude: Number(args[0]), longitude: Number(args[1]) }
+  : null;
 const interestsFlag = args.indexOf('--interests');
 const interests =
   interestsFlag >= 0
     ? args[interestsFlag + 1].split(',').map((interest) => interest.trim())
     : ['Bouldering', 'Indie music', 'Coffee', 'Startups', 'AI', 'Hiking'];
 
-if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
-  console.error('usage: node scripts/fake-neighbor.mjs <latitude> <longitude> [--interests "a,b,c"]');
-  process.exit(1);
-}
-
 let token = await signIn();
 const seenMessages = new Map();
 
-await api('PUT', '/me', {
+const { profile: bot } = await api('PUT', '/me', {
   display_name: 'Robo',
   bio: 'A friendly test neighbor. Loves whatever you love.',
   avatar_url: null,
@@ -45,7 +50,8 @@ await api('PUT', '/me', {
   dating_enabled: false,
 });
 await api('POST', '/presence', { active: true });
-console.log(`🤖 ${EMAIL} is on at ${latitude}, ${longitude} with interests: ${interests.join(', ')}`);
+const where = fixed ? `${fixed.latitude}, ${fixed.longitude}` : "your phone's location";
+console.log(`🤖 ${EMAIL} is on at ${where} with interests: ${interests.join(', ')}`);
 
 process.on('SIGINT', async () => {
   await api('POST', '/presence', { active: false }).catch(() => {});
@@ -59,7 +65,12 @@ while (true) {
 }
 
 async function tick() {
-  const { sparks } = await api('POST', '/presence/ping', { latitude, longitude, accuracy: 5 });
+  const spot = fixed ?? latestOtherPing();
+  if (!spot) {
+    console.log('🤖 waiting for your phone to ping (switch Spark on in the app)');
+    return;
+  }
+  const { sparks } = await api('POST', '/presence/ping', { ...spot, accuracy: 5 });
   for (const spark of sparks) {
     console.log(`⚡ spark ${spark.id} (${spark.score}%): ${spark.reason}`);
     await api('POST', `/sparks/${spark.id}/wave`);
@@ -78,6 +89,20 @@ async function tick() {
       });
     }
   }
+}
+
+/** Where the most recent other user pinged in the last 2 minutes. */
+function latestOtherPing() {
+  const sql = `
+    SELECT ST_Y(location::geometry) || ',' || ST_X(location::geometry)
+    FROM location_pings
+    WHERE user_id <> '${bot.id}' AND recorded_at > now() - INTERVAL '2 minutes'
+    ORDER BY recorded_at DESC
+    LIMIT 1`;
+  const row = execFileSync('psql', [PINGS_DATABASE_URL, '-tAc', sql], { encoding: 'utf8' }).trim();
+  if (!row) return null;
+  const [latitude, longitude] = row.split(',').map(Number);
+  return { latitude, longitude };
 }
 
 async function api(method, path, body) {

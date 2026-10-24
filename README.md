@@ -93,13 +93,14 @@ Push tokens need an EAS project id (`npx eas-cli@latest init` adds it to `app.js
 
 ### Testing with one phone
 
-Sparks need two people nearby. `scripts/fake-neighbor.mjs` plays the second one: it signs up a bot account, switches Spark on and pings from a spot you give it, waves at every spark and replies to chat messages.
+Sparks need two people nearby. `scripts/fake-neighbor.mjs` plays the second one: it signs up a bot account, switches Spark on and pings from wherever your phone last pinged (read from the pings database via `psql`), waves at every spark and replies to chat messages.
 
 ```sh
-node scripts/fake-neighbor.mjs 37.7749 -122.4194 --interests "Bouldering,Jazz,Coffee"
+node scripts/fake-neighbor.mjs --interests "Bouldering,Jazz,Coffee"
+node scripts/fake-neighbor.mjs 37.7749 -122.4194   # or a fixed spot
 ```
 
-Use your phone's coordinates (long-press in Google Maps) and interests that overlap with your profile. Indoor GPS drifts, so set `PROXIMITY_RADIUS_M=200` in `backend/.env` while testing. A pair that fizzled is only re-scored after one of the profiles changes.
+Pick interests that overlap with your profile. Indoor GPS drifts, so set `PROXIMITY_RADIUS_M=200` in `backend/.env` while testing. A pair that fizzled is only re-scored after one of the profiles changes.
 
 ### Linked accounts
 
