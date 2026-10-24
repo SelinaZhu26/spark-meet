@@ -64,7 +64,7 @@ cargo run              # runs migrations on startup, listens on :8080
 cargo test
 ```
 
-The sqlx query cache in `.sqlx/` lets the backend build without a database. After changing a query, run `cargo sqlx prepare` against a migrated database and commit `.sqlx/`.
+`SQLX_OFFLINE=true` (in `.env`) builds against the committed query cache in `.sqlx/`, so compiling never needs a database with tables in it; the backend creates them on startup. After changing a query, run `cargo sqlx prepare` against a migrated database and commit `.sqlx/`.
 
 Production: `DATABASE_URL` is the Supabase **session pooler** connection string (the transaction pooler breaks prepared statements), and `PINGS_DATABASE_URL` is the Tiger Data service. Leaving `PINGS_DATABASE_URL` unset keeps pings in the main database (without TimescaleDB the table stays a plain table).
 
