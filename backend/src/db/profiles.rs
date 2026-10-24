@@ -78,7 +78,14 @@ pub async fn update(db: &PgPool, id: Uuid, update: &ProfileUpdate) -> sqlx::Resu
             interests = EXCLUDED.interests,
             friends_enabled = EXCLUDED.friends_enabled,
             dating_enabled = EXCLUDED.dating_enabled,
-            updated_at = now()
+            updated_at = CASE
+                WHEN (profiles.bio, profiles.interests, profiles.friends_enabled,
+                      profiles.dating_enabled)
+                     IS DISTINCT FROM (EXCLUDED.bio, EXCLUDED.interests,
+                                       EXCLUDED.friends_enabled, EXCLUDED.dating_enabled)
+                THEN now()
+                ELSE profiles.updated_at
+            END
         RETURNING id, display_name, bio, avatar_url, interests, friends_enabled,
                   dating_enabled, active, created_at, updated_at
         "#,
@@ -111,14 +118,27 @@ pub async fn set_active(db: &PgPool, id: Uuid, active: bool) -> sqlx::Result<Opt
     .await
 }
 
+/// Stores a device's push token, taking it away from any other account that
+/// signed in on the same device before.
 pub async fn set_push_token(db: &PgPool, id: Uuid, token: Option<&str>) -> sqlx::Result<bool> {
+    let mut tx = db.begin().await?;
+    if let Some(token) = token {
+        sqlx::query!(
+            "UPDATE profiles SET push_token = NULL WHERE push_token = $1 AND id <> $2",
+            token,
+            id
+        )
+        .execute(&mut *tx)
+        .await?;
+    }
     let result = sqlx::query!(
         "UPDATE profiles SET push_token = $2 WHERE id = $1",
         id,
         token
     )
-    .execute(db)
+    .execute(&mut *tx)
     .await?;
+    tx.commit().await?;
     Ok(result.rows_affected() == 1)
 }
 

@@ -11,7 +11,7 @@ use axum::{
 };
 use jsonwebtoken::{Algorithm, DecodingKey, Validation, decode, decode_header, jwk::JwkSet};
 use serde::Deserialize;
-use tokio::sync::RwLock;
+use tokio::sync::{Mutex, RwLock};
 use uuid::Uuid;
 
 use crate::{
@@ -22,6 +22,8 @@ use crate::{
 const AUDIENCE: &str = "authenticated";
 /// Minimum time between JWKS refetches triggered by unknown key ids.
 const JWKS_REFRESH_COOLDOWN: Duration = Duration::from_secs(60);
+/// Shorter cooldown after a failed fetch, so a blip doesn't lock out logins.
+const JWKS_RETRY_COOLDOWN: Duration = Duration::from_secs(5);
 
 /// Extractor for routes that require a signed-in user.
 #[derive(Debug, Clone, Copy)]
@@ -62,12 +64,14 @@ struct Jwks {
     url: String,
     http: reqwest::Client,
     cache: RwLock<JwksCache>,
+    /// Single-flights refetches without holding `cache` across the network.
+    refresh: Mutex<()>,
 }
 
 #[derive(Default)]
 struct JwksCache {
     keys: Option<JwkSet>,
-    fetched_at: Option<Instant>,
+    next_fetch: Option<Instant>,
 }
 
 impl JwtVerifier {
@@ -78,6 +82,7 @@ impl JwtVerifier {
                 url: format!("{supabase_url}/auth/v1/.well-known/jwks.json"),
                 http,
                 cache: RwLock::default(),
+                refresh: Mutex::default(),
             }),
         };
         Self { source }
@@ -117,25 +122,44 @@ impl Jwks {
             return Ok(key);
         }
 
-        let mut cache = self.cache.write().await;
-        let recently_fetched = cache
-            .fetched_at
-            .is_some_and(|at| at.elapsed() < JWKS_REFRESH_COOLDOWN);
-        if !recently_fetched {
-            let keys = self
-                .http
-                .get(&self.url)
-                .send()
-                .await?
-                .error_for_status()?
-                .json::<JwkSet>()
-                .await?;
-            cache.keys = Some(keys);
-            cache.fetched_at = Some(Instant::now());
+        let _refresh = self.refresh.lock().await;
+        // Another request may have refreshed while we waited.
+        if let Some(key) = self.cached(kid).await? {
+            return Ok(key);
         }
-        drop(cache);
+        let due = self
+            .cache
+            .read()
+            .await
+            .next_fetch
+            .is_none_or(|at| Instant::now() >= at);
+        if due {
+            let fetched = self.fetch().await;
+            let mut cache = self.cache.write().await;
+            match fetched {
+                Ok(keys) => {
+                    cache.keys = Some(keys);
+                    cache.next_fetch = Some(Instant::now() + JWKS_REFRESH_COOLDOWN);
+                }
+                Err(err) => {
+                    cache.next_fetch = Some(Instant::now() + JWKS_RETRY_COOLDOWN);
+                    return Err(err);
+                }
+            }
+        }
 
         self.cached(kid).await?.ok_or(AppError::Unauthorized)
+    }
+
+    async fn fetch(&self) -> AppResult<JwkSet> {
+        Ok(self
+            .http
+            .get(&self.url)
+            .send()
+            .await?
+            .error_for_status()?
+            .json()
+            .await?)
     }
 
     async fn cached(&self, kid: &str) -> AppResult<Option<DecodingKey>> {

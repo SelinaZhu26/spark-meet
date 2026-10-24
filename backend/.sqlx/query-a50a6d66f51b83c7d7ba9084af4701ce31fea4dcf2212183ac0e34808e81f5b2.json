@@ -1,0 +1,21 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE encounters\n        SET status = CASE WHEN $2 THEN 'sparked' ELSE 'fizzled' END,\n            similarity = $3,\n            score = $4,\n            mode = $5,\n            shared_interests = $6,\n            reason = $7,\n            icebreaker = $8,\n            sparked_at = CASE WHEN $2 THEN now() END,\n            updated_at = now()\n        WHERE id = $1 AND status = 'scoring'\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Bool",
+        "Float4",
+        "Int2",
+        "Text",
+        "TextArray",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "a50a6d66f51b83c7d7ba9084af4701ce31fea4dcf2212183ac0e34808e81f5b2"
+}

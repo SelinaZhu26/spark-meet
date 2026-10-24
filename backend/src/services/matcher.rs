@@ -168,23 +168,40 @@ async fn evaluate(
         return Ok(encounters::finish(&state.db, encounter_id, &verdict).await?);
     }
 
-    let (doc_a, doc_b) = tokio::try_join!(
-        interest_profile::load_document(state, a.id),
-        interest_profile::load_document(state, b.id),
+    let (profile_a, profile_b) = tokio::try_join!(
+        interest_profile::load(state, a.id),
+        interest_profile::load(state, b.id),
     )?;
-    let judgement = state.gemini.judge(&doc_a, &doc_b, modes).await?;
+    let judgement = state
+        .gemini
+        .judge(&profile_a.document, &profile_b.document, modes)
+        .await?;
     let score = judgement.score.clamp(0, 100) as i16;
     let mode = pick_mode(&judgement.mode, modes);
-    let sparked = score >= matching.spark_threshold && mode.is_some();
+    // Cards are shown before anyone waves, so a verdict that quotes a bio
+    // (e.g. a bio crafted to make Gemini repeat the other person's) is
+    // dropped rather than shown.
+    let quotes_bio = [&judgement.reason, &judgement.icebreaker]
+        .into_iter()
+        .chain(&judgement.shared_interests)
+        .any(|text| quotes(text, &profile_a.profile.bio) || quotes(text, &profile_b.profile.bio));
+    if quotes_bio {
+        tracing::warn!(%encounter_id, "verdict quoted a bio; discarding it");
+    }
+    let sparked = score >= matching.spark_threshold && mode.is_some() && !quotes_bio;
     tracing::info!(%encounter_id, ?similarity, score, ?mode, sparked, "encounter scored");
 
     let verdict = Verdict {
         similarity,
         score: Some(score),
         mode: mode.map(Mode::as_str),
-        shared_interests: &judgement.shared_interests,
-        reason: Some(&judgement.reason),
-        icebreaker: Some(&judgement.icebreaker),
+        shared_interests: if quotes_bio {
+            &[]
+        } else {
+            &judgement.shared_interests
+        },
+        reason: (!quotes_bio).then_some(judgement.reason.as_str()),
+        icebreaker: (!quotes_bio).then_some(judgement.icebreaker.as_str()),
         sparked,
     };
     encounters::finish(&state.db, encounter_id, &verdict).await?;
@@ -199,12 +216,35 @@ async fn evaluate(
             let Some(token) = user.push_token.as_deref() else {
                 continue;
             };
-            if push::send(&state.http, token, &notification).await {
-                encounters::mark_delivered(&state.db, encounter_id, user.id).await?;
+            // The spark is already stored; failing here must not undo it.
+            // Worst case the phone also hears about it on its next ping.
+            if push::send(&state.http, token, &notification).await
+                && let Err(err) = encounters::mark_delivered(&state.db, encounter_id, user.id).await
+            {
+                tracing::warn!(%encounter_id, error = %err, "failed to mark spark delivered");
             }
         }
     }
     Ok(())
+}
+
+/// Words in a row that count as quoting someone's bio.
+const QUOTE_WORDS: usize = 5;
+
+/// Whether `text` repeats `QUOTE_WORDS` or more consecutive words of `source`,
+/// ignoring case and punctuation.
+fn quotes(text: &str, source: &str) -> bool {
+    fn words(value: &str) -> Vec<String> {
+        value
+            .split(|ch: char| !ch.is_alphanumeric())
+            .filter(|word| !word.is_empty())
+            .map(str::to_lowercase)
+            .collect()
+    }
+    let text = format!(" {} ", words(text).join(" "));
+    words(source)
+        .windows(QUOTE_WORDS)
+        .any(|window| text.contains(&format!(" {} ", window.join(" "))))
 }
 
 /// Notification text. Says what's shared, never who or where.
@@ -254,6 +294,14 @@ mod tests {
         assert_eq!(pick_mode("friends", &[Mode::Dating]), None);
         assert_eq!(pick_mode("none", &[Mode::Friends, Mode::Dating]), None);
         assert_eq!(pick_mode("enemies", &[Mode::Friends]), None);
+    }
+
+    #[test]
+    fn detects_bio_quoted_in_verdict_text() {
+        let bio = "I work at Acme Robotics on Market Street, ask me about drones";
+        assert!(quotes("They said: work at acme robotics on market!", bio));
+        assert!(!quotes("You both love building drones and robots.", bio));
+        assert!(!quotes("anything", ""));
     }
 
     #[test]

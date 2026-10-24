@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE encounters\n        SET status = 'failed', updated_at = now()\n        WHERE id = $1 AND status = 'scoring'\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "0e8e87ebfcd4b7bca997feeaac642af696a96d893955c1b95a6ab4f92f46bc12"
+}

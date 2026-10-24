@@ -26,6 +26,32 @@ pub async fn record(
     Ok(())
 }
 
+/// Seconds since the user's last ping and meters between it and the given
+/// point, if they pinged within the last hour.
+pub async fn last_movement(
+    db: &PgPool,
+    user_id: Uuid,
+    latitude: f64,
+    longitude: f64,
+) -> sqlx::Result<Option<(f64, f64)>> {
+    let row = sqlx::query!(
+        r#"
+        SELECT EXTRACT(EPOCH FROM now() - recorded_at)::float8 AS "secs!",
+               ST_Distance(location, ST_SetSRID(ST_MakePoint($2, $3), 4326)::geography) AS "meters!"
+        FROM location_pings
+        WHERE user_id = $1
+        ORDER BY recorded_at DESC
+        LIMIT 1
+        "#,
+        user_id,
+        longitude,
+        latitude
+    )
+    .fetch_optional(db)
+    .await?;
+    Ok(row.map(|row| (row.secs, row.meters)))
+}
+
 /// Users other than `user_id` who pinged within `radius_m` of the given point
 /// in the last `window_secs` seconds.
 pub async fn nearby(

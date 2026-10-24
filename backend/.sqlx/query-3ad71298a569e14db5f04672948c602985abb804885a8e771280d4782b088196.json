@@ -1,0 +1,32 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT EXTRACT(EPOCH FROM now() - recorded_at)::float8 AS \"secs!\",\n               ST_Distance(location, ST_SetSRID(ST_MakePoint($2, $3), 4326)::geography) AS \"meters!\"\n        FROM location_pings\n        WHERE user_id = $1\n        ORDER BY recorded_at DESC\n        LIMIT 1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "secs!",
+        "type_info": "Float8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "meters!",
+        "type_info": "Float8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Float8",
+        "Float8"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "3ad71298a569e14db5f04672948c602985abb804885a8e771280d4782b088196"
+}

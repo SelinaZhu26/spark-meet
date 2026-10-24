@@ -15,6 +15,12 @@ use crate::{
 
 /// Fixes less accurate than this are too vague to say who's "right here".
 const MAX_ACCURACY_M: f32 = 100.0;
+/// Pings closer together than this are not matched again.
+const MIN_PING_INTERVAL_SECS: f64 = 10.0;
+/// Faster apparent movement than this (~250 km/h) means a spoofed location.
+/// Together with the interval this makes sweeping fake locations to find
+/// someone impractical.
+const MAX_SPEED_MPS: f64 = 70.0;
 
 #[derive(Deserialize)]
 pub struct Presence {
@@ -75,7 +81,18 @@ pub async fn ping(
     let precise = body
         .accuracy
         .is_none_or(|accuracy| accuracy <= MAX_ACCURACY_M);
-    if precise {
+    let plausible = match pings::last_movement(
+        &state.pings_db,
+        user.id,
+        body.latitude,
+        body.longitude,
+    )
+    .await?
+    {
+        Some((secs, meters)) => is_plausible(secs, meters),
+        None => true,
+    };
+    if precise && plausible {
         pings::record(
             &state.pings_db,
             user.id,
@@ -98,4 +115,21 @@ pub async fn ping(
             .collect()
     };
     Ok(Json(PingResponse { sparks }))
+}
+
+fn is_plausible(secs_since_last: f64, meters_moved: f64) -> bool {
+    secs_since_last >= MIN_PING_INTERVAL_SECS && meters_moved / secs_since_last <= MAX_SPEED_MPS
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn rejects_rapid_or_teleporting_pings() {
+        assert!(is_plausible(30.0, 40.0));
+        assert!(is_plausible(600.0, 30_000.0));
+        assert!(!is_plausible(3.0, 0.0));
+        assert!(!is_plausible(30.0, 5_000.0));
+    }
 }

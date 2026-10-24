@@ -16,6 +16,11 @@ use crate::{
     state::AppState,
 };
 
+pub struct InterestProfile {
+    pub profile: Profile,
+    pub document: String,
+}
+
 pub fn document(profile: &Profile, integrations: &[Integration]) -> String {
     let mut doc = String::new();
     if !profile.interests.is_empty() {
@@ -27,20 +32,23 @@ pub fn document(profile: &Profile, integrations: &[Integration]) -> String {
     for integration in integrations {
         let _ = writeln!(doc, "{}", integration.summary);
     }
-    doc
+    // The judge prompt wraps each document in <person_x> tags; user text must
+    // not be able to close or forge them.
+    doc.replace(['<', '>'], "")
 }
 
-pub async fn load_document(state: &AppState, user_id: Uuid) -> AppResult<String> {
+pub async fn load(state: &AppState, user_id: Uuid) -> AppResult<InterestProfile> {
     let (profile, integrations) = tokio::try_join!(
         profiles::get(&state.db, user_id),
         integrations::list(&state.db, user_id),
     )?;
     let profile = profile.ok_or(AppError::NotFound("profile"))?;
-    Ok(document(&profile, &integrations))
+    let document = document(&profile, &integrations);
+    Ok(InterestProfile { profile, document })
 }
 
 pub async fn refresh_embedding(state: &AppState, user_id: Uuid) -> AppResult<()> {
-    let doc = load_document(state, user_id).await?;
+    let doc = load(state, user_id).await?.document;
     if doc.trim().is_empty() {
         return Ok(());
     }

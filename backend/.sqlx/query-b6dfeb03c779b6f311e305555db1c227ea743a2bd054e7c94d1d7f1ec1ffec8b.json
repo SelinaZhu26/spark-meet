@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        INSERT INTO profiles (id, display_name, bio, avatar_url, interests,\n                              friends_enabled, dating_enabled)\n        VALUES ($1, $2, $3, $4, $5, $6, $7)\n        ON CONFLICT (id) DO UPDATE\n        SET display_name = EXCLUDED.display_name,\n            bio = EXCLUDED.bio,\n            avatar_url = EXCLUDED.avatar_url,\n            interests = EXCLUDED.interests,\n            friends_enabled = EXCLUDED.friends_enabled,\n            dating_enabled = EXCLUDED.dating_enabled,\n            updated_at = now()\n        RETURNING id, display_name, bio, avatar_url, interests, friends_enabled,\n                  dating_enabled, active, created_at, updated_at\n        ",
+  "query": "\n        INSERT INTO profiles (id, display_name, bio, avatar_url, interests,\n                              friends_enabled, dating_enabled)\n        VALUES ($1, $2, $3, $4, $5, $6, $7)\n        ON CONFLICT (id) DO UPDATE\n        SET display_name = EXCLUDED.display_name,\n            bio = EXCLUDED.bio,\n            avatar_url = EXCLUDED.avatar_url,\n            interests = EXCLUDED.interests,\n            friends_enabled = EXCLUDED.friends_enabled,\n            dating_enabled = EXCLUDED.dating_enabled,\n            updated_at = CASE\n                WHEN (profiles.bio, profiles.interests, profiles.friends_enabled,\n                      profiles.dating_enabled)\n                     IS DISTINCT FROM (EXCLUDED.bio, EXCLUDED.interests,\n                                       EXCLUDED.friends_enabled, EXCLUDED.dating_enabled)\n                THEN now()\n                ELSE profiles.updated_at\n            END\n        RETURNING id, display_name, bio, avatar_url, interests, friends_enabled,\n                  dating_enabled, active, created_at, updated_at\n        ",
   "describe": {
     "columns": [
       {
@@ -138,5 +138,5 @@
       false
     ]
   },
-  "hash": "f6cc6ae8074bb3e3c684a8a709a3cc1ffdb36c26df734fcfa6b9f34dc5b8f3a4"
+  "hash": "b6dfeb03c779b6f311e305555db1c227ea743a2bd054e7c94d1d7f1ec1ffec8b"
 }

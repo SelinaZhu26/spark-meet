@@ -43,6 +43,8 @@ Both phones report pings, so both "see" the encounter. The database's unique con
 - **Separate pools.** Friends and dating are separate. A dating spark requires both people to have opted into dating, enforced in code (`shared_modes`, `pick_mode`), not just in the prompt.
 - **No identifying data goes to Gemini.** Interest profiles contain interests, bio and linked-account summaries, never names. Profiles are delimited and the model is told to ignore instructions inside them.
 - **Linked accounts are a one-time snapshot.** OAuth tokens are used once to read top artists or recent activities, then discarded.
+- **Spoofed locations are throttled.** Pings closer than 10 s apart or implying more than ~250 km/h aren't matched, so sweeping fake coordinates to find someone is impractical.
+- **Verdicts can't quote bios.** Cards are shown before anyone waves, so a Gemini verdict that repeats five or more words of either bio is discarded.
 - Supabase tables have row-level security enabled with no policies, so the auto-generated Supabase REST API can't read them. Only the backend (table owner) can.
 
 ## Running locally
@@ -93,7 +95,7 @@ Push tokens need an EAS project id (`npx eas-cli@latest init` adds it to `app.js
 
 ### Linked accounts
 
-Register `<PUBLIC_BASE_URL>/integrations/spotify/callback` and `<PUBLIC_BASE_URL>/integrations/strava/callback` with each provider, then set the client id and secret env vars. Spotify only accepts HTTPS or loopback redirect URIs, so test against the deployed domain (or a tunnel). The app's return deep links must match `APP_REDIRECT_ALLOWLIST` (default `spark://,exp://`).
+Register `<PUBLIC_BASE_URL>/integrations/spotify/callback` and `<PUBLIC_BASE_URL>/integrations/strava/callback` with each provider, then set the client id and secret env vars. Spotify only accepts HTTPS or loopback redirect URIs, so test against the deployed domain (or a tunnel). The app's return deep links must match `APP_REDIRECT_ALLOWLIST` (default `spark://`; `.env.example` adds `exp://` for Expo Go, which you should drop in production).
 
 ## API
 

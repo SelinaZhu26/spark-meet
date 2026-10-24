@@ -85,13 +85,7 @@ impl Config {
             }),
             spotify: oauth_client("SPOTIFY"),
             strava: oauth_client("STRAVA"),
-            app_redirect_allowlist: optional("APP_REDIRECT_ALLOWLIST")
-                .unwrap_or_else(|| "spark://,exp://".to_owned())
-                .split(',')
-                .map(str::trim)
-                .filter(|prefix| !prefix.is_empty())
-                .map(str::to_owned)
-                .collect(),
+            app_redirect_allowlist: redirect_allowlist()?,
             audio_cache_dir: optional("AUDIO_CACHE_DIR")
                 .unwrap_or_else(|| "./cache".to_owned())
                 .into(),
@@ -121,6 +115,23 @@ fn parsed<T: FromStr>(key: &'static str, default: T) -> Result<T, ConfigError> {
             .map_err(|_| ConfigError::Invalid { key, value }),
         None => Ok(default),
     }
+}
+
+/// Prefixes must end in `/` (e.g. `spark://`) so `https://app.example`
+/// can't also allow `https://app.example.evil`.
+fn redirect_allowlist() -> Result<Vec<String>, ConfigError> {
+    let key = "APP_REDIRECT_ALLOWLIST";
+    let value = optional(key).unwrap_or_else(|| "spark://".to_owned());
+    let prefixes = value
+        .split(',')
+        .map(str::trim)
+        .filter(|prefix| !prefix.is_empty())
+        .map(str::to_owned)
+        .collect::<Vec<_>>();
+    if prefixes.iter().any(|prefix| !prefix.ends_with('/')) {
+        return Err(ConfigError::Invalid { key, value });
+    }
+    Ok(prefixes)
 }
 
 fn oauth_client(prefix: &str) -> Option<OAuthClient> {

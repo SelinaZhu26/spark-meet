@@ -81,7 +81,7 @@ pub async fn finish(db: &PgPool, id: Uuid, verdict: &Verdict<'_>) -> sqlx::Resul
             icebreaker = $8,
             sparked_at = CASE WHEN $2 THEN now() END,
             updated_at = now()
-        WHERE id = $1
+        WHERE id = $1 AND status = 'scoring'
         "#,
         id,
         verdict.sparked,
@@ -99,7 +99,11 @@ pub async fn finish(db: &PgPool, id: Uuid, verdict: &Verdict<'_>) -> sqlx::Resul
 
 pub async fn mark_failed(db: &PgPool, id: Uuid) -> sqlx::Result<()> {
     sqlx::query!(
-        "UPDATE encounters SET status = 'failed', updated_at = now() WHERE id = $1",
+        r#"
+        UPDATE encounters
+        SET status = 'failed', updated_at = now()
+        WHERE id = $1 AND status = 'scoring'
+        "#,
         id
     )
     .execute(db)
