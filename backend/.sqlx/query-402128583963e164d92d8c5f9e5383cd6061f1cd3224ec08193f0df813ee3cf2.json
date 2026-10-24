@@ -1,0 +1,31 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE encounters\n        SET a_waved_at = CASE WHEN user_a = $2 THEN now() ELSE a_waved_at END,\n            b_waved_at = CASE WHEN user_b = $2 THEN now() ELSE b_waved_at END\n        WHERE id = $1\n          AND status = 'sparked'\n          AND ((user_a = $2 AND a_waved_at IS NULL)\n               OR (user_b = $2 AND b_waved_at IS NULL))\n        RETURNING (a_waved_at IS NOT NULL AND b_waved_at IS NOT NULL) AS \"connected!\",\n                  (CASE WHEN user_a = $2 THEN user_b ELSE user_a END) AS \"other_id!\"\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "connected!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "other_id!",
+        "type_info": "Uuid",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "402128583963e164d92d8c5f9e5383cd6061f1cd3224ec08193f0df813ee3cf2"
+}

@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT (CASE WHEN user_a = $2 THEN user_b ELSE user_a END) AS \"other_id!\"\n        FROM encounters\n        WHERE id = $1\n          AND status = 'sparked'\n          AND (user_a = $2 OR user_b = $2)\n          AND a_waved_at IS NOT NULL\n          AND b_waved_at IS NOT NULL\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "other_id!",
+        "type_info": "Uuid",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "4f879b7816b6d545b1bf2bc4a2eee7399b970baa8e09fb7a25590356f3aec5ad"
+}

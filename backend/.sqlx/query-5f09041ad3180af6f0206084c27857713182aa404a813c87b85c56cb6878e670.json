@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO location_pings (user_id, location, accuracy_m)\n        VALUES ($1, ST_SetSRID(ST_MakePoint($2, $3), 4326)::geography, $4)\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Float8",
+        "Float8",
+        "Float4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "5f09041ad3180af6f0206084c27857713182aa404a813c87b85c56cb6878e670"
+}

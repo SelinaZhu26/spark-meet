@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE encounters\n        SET a_notified_at = CASE WHEN user_a = $2 THEN now() ELSE a_notified_at END,\n            b_notified_at = CASE WHEN user_b = $2 THEN now() ELSE b_notified_at END\n        WHERE id = $1\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "30beb5286089f8fa67826596d9e4262385cd329b9fd1ad2a560b04343dbda49b"
+}

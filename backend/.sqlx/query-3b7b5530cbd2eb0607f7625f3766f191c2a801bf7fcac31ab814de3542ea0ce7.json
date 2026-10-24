@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO integrations (user_id, provider, summary, data)\n        VALUES ($1, $2, $3, $4)\n        ON CONFLICT (user_id, provider) DO UPDATE\n        SET summary = EXCLUDED.summary, data = EXCLUDED.data, connected_at = now()\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text",
+        "Jsonb"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "3b7b5530cbd2eb0607f7625f3766f191c2a801bf7fcac31ab814de3542ea0ce7"
+}

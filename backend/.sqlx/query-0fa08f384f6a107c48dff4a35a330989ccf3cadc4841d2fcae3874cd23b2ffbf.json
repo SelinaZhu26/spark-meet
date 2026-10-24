@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT push_token FROM profiles WHERE id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "push_token",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "profiles",
+            "name": "push_token"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "0fa08f384f6a107c48dff4a35a330989ccf3cadc4841d2fcae3874cd23b2ffbf"
+}

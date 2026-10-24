@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM integrations WHERE user_id = $1 AND provider = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "ee25adaa82b472617597facb956a57063e65a79c9133794b0e1e3be2faac2947"
+}

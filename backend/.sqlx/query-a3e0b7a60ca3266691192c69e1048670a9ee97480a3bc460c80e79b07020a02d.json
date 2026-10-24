@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE profiles SET embedding = $2 WHERE id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Float4Array"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "a3e0b7a60ca3266691192c69e1048670a9ee97480a3bc460c80e79b07020a02d"
+}

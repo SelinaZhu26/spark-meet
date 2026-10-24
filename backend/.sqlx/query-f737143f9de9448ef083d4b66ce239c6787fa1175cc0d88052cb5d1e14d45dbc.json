@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM location_pings WHERE recorded_at < now() - INTERVAL '1 hour'",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "f737143f9de9448ef083d4b66ce239c6787fa1175cc0d88052cb5d1e14d45dbc"
+}

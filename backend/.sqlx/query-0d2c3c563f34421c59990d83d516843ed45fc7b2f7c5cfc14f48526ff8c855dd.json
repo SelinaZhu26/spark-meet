@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE encounters\n        SET a_notified_at = CASE WHEN user_a = $1 THEN now() ELSE a_notified_at END,\n            b_notified_at = CASE WHEN user_b = $1 THEN now() ELSE b_notified_at END\n        WHERE status = 'sparked'\n          AND ((user_a = $1 AND a_notified_at IS NULL)\n               OR (user_b = $1 AND b_notified_at IS NULL))\n        RETURNING id\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "encounters",
+            "name": "id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "0d2c3c563f34421c59990d83d516843ed45fc7b2f7c5cfc14f48526ff8c855dd"
+}

@@ -1,0 +1,170 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT e.id,\n               e.score AS \"score!\",\n               e.mode AS \"mode!\",\n               e.shared_interests,\n               e.reason AS \"reason!\",\n               e.icebreaker AS \"icebreaker!\",\n               e.sparked_at AS \"sparked_at!\",\n               (CASE WHEN e.user_a = $1 THEN e.a_waved_at ELSE e.b_waved_at END)\n                   IS NOT NULL AS \"waved!\",\n               (e.a_waved_at IS NOT NULL AND e.b_waved_at IS NOT NULL) AS \"connected!\",\n               (CASE WHEN e.user_a = $1 THEN e.user_b ELSE e.user_a END) AS \"other_id!\",\n               p.display_name AS \"other_display_name?\",\n               p.bio AS \"other_bio?\",\n               p.avatar_url AS \"other_avatar_url?\",\n               p.interests AS \"other_interests?\"\n        FROM encounters e\n        LEFT JOIN profiles p\n            ON p.id = (CASE WHEN e.user_a = $1 THEN e.user_b ELSE e.user_a END)\n           AND e.a_waved_at IS NOT NULL\n           AND e.b_waved_at IS NOT NULL\n        WHERE (e.user_a = $1 OR e.user_b = $1)\n          AND e.status = 'sparked'\n          AND ($2::uuid[] IS NULL OR e.id = ANY($2))\n        ORDER BY e.sparked_at DESC\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "encounters",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "score!",
+        "type_info": "Int2",
+        "origin": {
+          "Table": {
+            "table": "encounters",
+            "name": "score"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "mode!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "encounters",
+            "name": "mode"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "shared_interests",
+        "type_info": "TextArray",
+        "origin": {
+          "Table": {
+            "table": "encounters",
+            "name": "shared_interests"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "reason!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "encounters",
+            "name": "reason"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "icebreaker!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "encounters",
+            "name": "icebreaker"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "sparked_at!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "encounters",
+            "name": "sparked_at"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "waved!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 8,
+        "name": "connected!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 9,
+        "name": "other_id!",
+        "type_info": "Uuid",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 10,
+        "name": "other_display_name?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "profiles",
+            "name": "display_name"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "other_bio?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "profiles",
+            "name": "bio"
+          }
+        }
+      },
+      {
+        "ordinal": 12,
+        "name": "other_avatar_url?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "profiles",
+            "name": "avatar_url"
+          }
+        }
+      },
+      {
+        "ordinal": 13,
+        "name": "other_interests?",
+        "type_info": "TextArray",
+        "origin": {
+          "Table": {
+            "table": "profiles",
+            "name": "interests"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "UuidArray"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      true,
+      false,
+      true,
+      true,
+      true,
+      null,
+      null,
+      null,
+      false,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "fcfd94865ed192d69d4139985c2dcca502231ac24d8a0cbd4080d94005129e1a"
+}

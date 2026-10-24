@@ -1,0 +1,52 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT provider, summary, connected_at\n        FROM integrations\n        WHERE user_id = $1\n        ORDER BY provider\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "provider",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "integrations",
+            "name": "provider"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "summary",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "integrations",
+            "name": "summary"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "connected_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "integrations",
+            "name": "connected_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "e7128a358193ca6632cae32e376949eaa28d72b3e6f5f30db58764b0ae634387"
+}
