@@ -91,6 +91,16 @@ npx eas-cli@latest build --profile development   # cloud build, no Xcode needed
 
 Push tokens need an EAS project id (`npx eas-cli@latest init` adds it to `app.json`).
 
+### Testing with one phone
+
+Sparks need two people nearby. `scripts/fake-neighbor.mjs` plays the second one: it signs up a bot account, switches Spark on and pings from a spot you give it, waves at every spark and replies to chat messages.
+
+```sh
+node scripts/fake-neighbor.mjs 37.7749 -122.4194 --interests "Bouldering,Jazz,Coffee"
+```
+
+Use your phone's coordinates (long-press in Google Maps) and interests that overlap with your profile. Indoor GPS drifts, so set `PROXIMITY_RADIUS_M=200` in `backend/.env` while testing. A pair that fizzled is only re-scored after one of the profiles changes.
+
 ### Linked accounts
 
 Register `<PUBLIC_BASE_URL>/integrations/spotify/callback` and `<PUBLIC_BASE_URL>/integrations/strava/callback` with each provider, then set the client id and secret env vars. Spotify only accepts HTTPS or loopback redirect URIs, so test against the deployed domain (or a tunnel). The app's return deep links must match `APP_REDIRECT_ALLOWLIST` (default `spark://`; `.env.example` adds `exp://` for Expo Go, which you should drop in production).
