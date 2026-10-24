@@ -1,6 +1,5 @@
-import Constants from 'expo-constants';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
 import * as Device from 'expo-device';
-import * as Notifications from 'expo-notifications';
 import { AppState, Platform } from 'react-native';
 
 import { Colors } from '@/constants/theme';
@@ -11,7 +10,18 @@ export type NotificationData =
   | { type: 'connected'; spark_id: string }
   | { type: 'message'; spark_id: string };
 
-Notifications.setNotificationHandler({
+type NotificationsModule = typeof import('expo-notifications');
+
+// Expo Go on Android ships without expo-notifications' native push modules,
+// and the package loads them on import, so it can't be imported there at
+// all. Notifications are then no-ops; the in-app buzz still works.
+const Notifications: NotificationsModule | null =
+  Platform.OS === 'android' && Constants.executionEnvironment === ExecutionEnvironment.StoreClient
+    ? null
+    : // eslint-disable-next-line @typescript-eslint/no-require-imports
+      require('expo-notifications');
+
+Notifications?.setNotificationHandler({
   handleNotification: async (notification) => {
     // In the foreground a spark gets the full-screen buzz instead of a banner.
     const data = notification.request.content.data as Partial<NotificationData> | undefined;
@@ -27,14 +37,15 @@ Notifications.setNotificationHandler({
 
 /**
  * Asks for notification permission and returns an Expo push token, or null
- * where push isn't available (simulators, Expo Go on Android, no EAS
- * project). Local notifications still work in those cases.
+ * where push isn't available (Expo Go, simulators, no EAS project).
  */
 export async function setupNotifications(): Promise<string | null> {
+  if (!Notifications) {
+    return null;
+  }
   if (Platform.OS === 'android') {
     await Notifications.setNotificationChannelAsync('default', {
       name: 'Sparks',
-      // eslint-disable-next-line import/namespace -- re-exported enum the resolver misses
       importance: Notifications.AndroidImportance.MAX,
       vibrationPattern: [0, 120, 80, 120, 80, 240],
       lightColor: Colors.ember,
@@ -66,8 +77,28 @@ export function sparkTeaser(spark: Spark): string {
 
 export async function notifySpark(spark: Spark) {
   const data: NotificationData = { type: 'spark', spark_id: spark.id };
-  await Notifications.scheduleNotificationAsync({
+  await Notifications?.scheduleNotificationAsync({
     content: { title: '⚡ Spark nearby', body: sparkTeaser(spark), data },
     trigger: null,
   });
+}
+
+/** Notifications that arrive while the app is open. */
+export function onNotificationReceived(listener: (data: Partial<NotificationData>) => void) {
+  const subscription = Notifications?.addNotificationReceivedListener((notification) =>
+    listener((notification.request.content.data ?? {}) as Partial<NotificationData>)
+  );
+  return () => subscription?.remove();
+}
+
+/** Notification taps, including the one that launched the app. */
+export function onNotificationTapped(listener: (data: Partial<NotificationData>) => void) {
+  if (!Notifications) {
+    return () => {};
+  }
+  const handle = (response: import('expo-notifications').NotificationResponse) =>
+    listener((response.notification.request.content.data ?? {}) as Partial<NotificationData>);
+  Notifications.getLastNotificationResponseAsync().then((response) => response && handle(response));
+  const subscription = Notifications.addNotificationResponseReceivedListener(handle);
+  return () => subscription.remove();
 }

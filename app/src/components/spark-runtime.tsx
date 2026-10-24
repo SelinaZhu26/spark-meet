@@ -1,11 +1,14 @@
-import * as Notifications from 'expo-notifications';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 
 import { SparkAlert } from '@/components/spark-alert';
 import { api } from '@/lib/api';
 import { buzz } from '@/lib/buzz';
-import { setupNotifications, type NotificationData } from '@/lib/notifications';
+import {
+  onNotificationReceived,
+  onNotificationTapped,
+  setupNotifications,
+} from '@/lib/notifications';
 import { onPresenceStopped, onSparks, resumePresence } from '@/lib/presence';
 import { useMe, useSession } from '@/lib/session';
 import type { Spark } from '@/lib/types';
@@ -48,32 +51,34 @@ export function SparkRuntime() {
   );
 
   // A spark scored by the other phone arrives as a push while we're open.
-  useEffect(() => {
-    const subscription = Notifications.addNotificationReceivedListener(async (notification) => {
-      const data = notification.request.content.data as Partial<NotificationData> | undefined;
-      if (data?.type === 'spark' && data.spark_id) {
-        const spark = await api.spark(data.spark_id).catch(() => null);
-        if (spark) {
-          buzz();
-          setAlert(spark);
+  useEffect(
+    () =>
+      onNotificationReceived(async (data) => {
+        if (data.type === 'spark' && data.spark_id) {
+          const spark = await api.spark(data.spark_id).catch(() => null);
+          if (spark) {
+            buzz();
+            setAlert(spark);
+          }
         }
-      }
-    });
-    return () => subscription.remove();
-  }, []);
+      }),
+    []
+  );
 
-  const response = Notifications.useLastNotificationResponse();
-  useEffect(() => {
-    const data = response?.notification.request.content.data as Partial<NotificationData> | undefined;
-    if (!data?.spark_id) {
-      return;
-    }
-    if (data.type === 'message') {
-      router.push({ pathname: '/chat/[id]', params: { id: data.spark_id } });
-    } else {
-      router.push({ pathname: '/spark/[id]', params: { id: data.spark_id } });
-    }
-  }, [response, router]);
+  useEffect(
+    () =>
+      onNotificationTapped((data) => {
+        if (!data.spark_id) {
+          return;
+        }
+        if (data.type === 'message') {
+          router.push({ pathname: '/chat/[id]', params: { id: data.spark_id } });
+        } else {
+          router.push({ pathname: '/spark/[id]', params: { id: data.spark_id } });
+        }
+      }),
+    [router]
+  );
 
   return (
     <SparkAlert
