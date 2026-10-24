@@ -144,26 +144,12 @@ export async function resumePresence(): Promise<PresenceMode | null> {
 async function startUpdates(prompt: boolean): Promise<PresenceMode> {
   startHeartbeat();
   if (!isExpoGo) {
-    const permission = prompt
-      ? await Location.requestBackgroundPermissionsAsync()
-      : await Location.getBackgroundPermissionsAsync();
-    if (permission.granted) {
-      if (!(await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK))) {
-        await Location.startLocationUpdatesAsync(LOCATION_TASK, {
-          accuracy: Location.Accuracy.High,
-          distanceInterval: 0,
-          timeInterval: MIN_PING_INTERVAL_MS,
-          pausesUpdatesAutomatically: false,
-          showsBackgroundLocationIndicator: true,
-          activityType: Location.ActivityType.Other,
-          foregroundService: {
-            notificationTitle: 'Spark is on',
-            notificationBody: "We'll buzz you when someone you'd click with is near.",
-            notificationColor: Colors.ember,
-          },
-        });
-      }
-      return 'background';
+    try {
+      return await startBackgroundUpdates(prompt);
+    } catch (error) {
+      // Background location isn't available (e.g. no permission, Expo Go):
+      // fall back to reporting while the app is open.
+      console.warn('[spark] background location unavailable', error);
     }
   }
   watcher ??= await Location.watchPositionAsync(
@@ -171,6 +157,31 @@ async function startUpdates(prompt: boolean): Promise<PresenceMode> {
     (location) => report(location)
   );
   return 'foreground';
+}
+
+async function startBackgroundUpdates(prompt: boolean): Promise<PresenceMode> {
+  const permission = prompt
+    ? await Location.requestBackgroundPermissionsAsync()
+    : await Location.getBackgroundPermissionsAsync();
+  if (permission.granted) {
+    if (!(await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK))) {
+      await Location.startLocationUpdatesAsync(LOCATION_TASK, {
+        accuracy: Location.Accuracy.High,
+        distanceInterval: 0,
+        timeInterval: MIN_PING_INTERVAL_MS,
+        pausesUpdatesAutomatically: false,
+        showsBackgroundLocationIndicator: true,
+        activityType: Location.ActivityType.Other,
+        foregroundService: {
+          notificationTitle: 'Spark is on',
+          notificationBody: "We'll buzz you when someone you'd click with is near.",
+          notificationColor: Colors.ember,
+        },
+      });
+    }
+    return 'background';
+  }
+  throw new Error('background location permission denied');
 }
 
 /** Stops reporting locally without telling the backend. */

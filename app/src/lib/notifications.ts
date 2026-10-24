@@ -1,4 +1,4 @@
-import { isRunningInExpoGo } from 'expo';
+import { requireOptionalNativeModule } from 'expo';
 import Constants from 'expo-constants';
 import * as Device from 'expo-device';
 import { AppState, Platform } from 'react-native';
@@ -13,11 +13,12 @@ export type NotificationData =
 
 type NotificationsModule = typeof import('expo-notifications');
 
-// Expo Go on Android ships without expo-notifications' native push modules,
-// and the package loads them on import, so it can't be imported there at
-// all. Notifications are then no-ops; the in-app buzz still works.
+// Expo Go on Android ships without expo-notifications' native push module,
+// and the package loads it on import, so importing it there crashes the app.
+// Check for the module itself rather than guessing the environment. Without
+// it, notifications are no-ops; the in-app buzz still works.
 const Notifications: NotificationsModule | null =
-  Platform.OS === 'android' && isRunningInExpoGo()
+  Platform.OS === 'android' && !requireOptionalNativeModule('ExpoTopicSubscriptionModule')
     ? null
     : // eslint-disable-next-line @typescript-eslint/no-require-imports
       require('expo-notifications');
