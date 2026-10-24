@@ -1,0 +1,15 @@
+# Local stand-in for both Supabase (main) and Tiger Data (pings).
+services:
+  db:
+    image: timescale/timescaledb-ha:pg17
+    environment:
+      POSTGRES_USER: spark
+      POSTGRES_PASSWORD: spark
+      POSTGRES_DB: spark
+    ports:
+      - "5544:5432"
+    volumes:
+      - spark-db:/home/postgres/pgdata/data
+
+volumes:
+  spark-db:
