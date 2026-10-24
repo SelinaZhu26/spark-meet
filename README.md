@@ -70,10 +70,8 @@ Production: `DATABASE_URL` is the Supabase **session pooler** connection string 
 
 ### Supabase setup
 
-1. **Authentication → Providers:** enable Google (and Phone with an SMS provider if you want phone sign-in). Email is on by default.
-2. **Authentication → URL configuration → Redirect URLs:** add `spark://auth-callback` and `exp://**` (Expo Go).
-3. **Authentication → Emails → Magic Link template:** include `{{ .Token }}` so emails contain the 6-digit code the app asks for.
-4. Backend: set `SUPABASE_URL`. Tokens are verified against the project's JWKS. For projects still on the legacy JWT secret, set `SUPABASE_JWT_SECRET` instead.
+1. **Authentication → Providers → Email:** turn off **Confirm email**. Sign-up then logs people straight in with email + password. No magic links, codes or SMS.
+2. Backend: set `SUPABASE_URL`. The backend checks each request's Supabase access token against the project's public keys (no setup). For projects still on the legacy JWT secret, set `SUPABASE_JWT_SECRET` instead.
 
 ### App
 

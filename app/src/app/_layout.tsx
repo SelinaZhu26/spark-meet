@@ -83,7 +83,6 @@ function RootNavigator() {
           <Stack.Screen name="chat/[id]" options={{ title: 'Chat' }} />
         </Stack.Protected>
         <Stack.Screen name="integrations" options={{ headerShown: false }} />
-        <Stack.Screen name="auth-callback" options={{ headerShown: false }} />
       </Stack>
       {onboarded && <SparkRuntime />}
     </>

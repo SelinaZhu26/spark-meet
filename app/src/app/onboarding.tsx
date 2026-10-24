@@ -7,12 +7,8 @@ import { Colors, Spacing } from '@/constants/theme';
 import { useMe, useSession } from '@/lib/session';
 
 export default function Onboarding() {
-  const { session, setMe } = useSession();
+  const { setMe } = useSession();
   const { profile } = useMe();
-  // Prefill from the identity provider (Google gives a name and a photo).
-  const metadata = session?.user.user_metadata ?? {};
-  const fullName: string = metadata.full_name ?? metadata.name ?? '';
-  const avatar: string | null = metadata.avatar_url ?? metadata.picture ?? null;
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
@@ -27,14 +23,7 @@ export default function Onboarding() {
           </AppText>
         </View>
         <ProfileForm
-          initial={{
-            display_name: profile.display_name || fullName.split(' ')[0] || '',
-            bio: profile.bio,
-            avatar_url: profile.avatar_url ?? (avatar?.startsWith('https://') ? avatar : null),
-            interests: profile.interests,
-            friends_enabled: profile.friends_enabled,
-            dating_enabled: profile.dating_enabled,
-          }}
+          initial={profile}
           submitLabel="Light my spark"
           onSaved={setMe}
         />

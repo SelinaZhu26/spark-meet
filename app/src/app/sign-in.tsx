@@ -7,35 +7,32 @@ import { Button } from '@/components/ui/button';
 import { AppText } from '@/components/ui/text';
 import { Colors, Gradients, Radius, Spacing } from '@/constants/theme';
 import { errorMessage } from '@/lib/api';
-import { otpTarget, sendOtp, signInWithGoogle, verifyOtp, type OtpTarget } from '@/lib/auth';
+import { supabase } from '@/lib/supabase';
 
 export default function SignIn() {
-  const [contact, setContact] = useState('');
-  const [target, setTarget] = useState<OtpTarget | null>(null);
-  const [code, setCode] = useState('');
-  const [busy, setBusy] = useState<'google' | 'send' | 'verify' | null>(null);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [busy, setBusy] = useState<'sign-in' | 'sign-up' | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const run = async (action: 'google' | 'send' | 'verify', task: () => Promise<void>) => {
+  // With "Confirm email" off in Supabase, both return a session right away.
+  const submit = async (action: 'sign-in' | 'sign-up') => {
     setBusy(action);
     setError(null);
-    try {
-      await task();
-    } catch (err) {
-      setError(errorMessage(err));
-    } finally {
-      setBusy(null);
+    const credentials = { email: email.trim(), password };
+    const { data, error: authError } =
+      action === 'sign-in'
+        ? await supabase.auth.signInWithPassword(credentials)
+        : await supabase.auth.signUp(credentials);
+    if (authError) {
+      setError(errorMessage(authError));
+    } else if (!data.session) {
+      setError('Account created, but Supabase wants email confirmation. Turn off "Confirm email".');
     }
+    setBusy(null);
   };
 
-  const send = () =>
-    run('send', async () => {
-      const next = otpTarget(contact);
-      await sendOtp(next);
-      setTarget(next);
-    });
-
-  const verify = () => run('verify', () => verifyOtp(target!, code.trim()));
+  const ready = email.includes('@') && password.length >= 6;
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -43,7 +40,11 @@ export default function SignIn() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.content}>
         <View style={styles.hero}>
-          <LinearGradient colors={Gradients.ember} style={styles.logo} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+          <LinearGradient
+            colors={Gradients.ember}
+            style={styles.logo}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}>
             <AppText style={styles.bolt}>⚡</AppText>
           </LinearGradient>
           <AppText variant="display">spark</AppText>
@@ -53,53 +54,39 @@ export default function SignIn() {
         </View>
 
         <View style={styles.actions}>
-          {target ? (
-            <>
-              <AppText tone="secondary">
-                Enter the code we sent to {'email' in target ? target.email : target.phone}.
-              </AppText>
-              <TextInput
-                value={code}
-                onChangeText={setCode}
-                placeholder="123456"
-                placeholderTextColor={Colors.textMuted}
-                keyboardType="number-pad"
-                autoComplete="one-time-code"
-                textContentType="oneTimeCode"
-                maxLength={8}
-                style={[styles.input, styles.code]}
-              />
-              <Button title="Verify" onPress={verify} loading={busy === 'verify'} disabled={code.trim().length < 6} />
-              <Button title="Use something else" variant="ghost" onPress={() => setTarget(null)} />
-            </>
-          ) : (
-            <>
-              <Button
-                title="Continue with Google"
-                variant="secondary"
-                onPress={() => run('google', signInWithGoogle)}
-                loading={busy === 'google'}
-              />
-              <View style={styles.divider}>
-                <View style={styles.rule} />
-                <AppText variant="caption" tone="muted">
-                  or
-                </AppText>
-                <View style={styles.rule} />
-              </View>
-              <TextInput
-                value={contact}
-                onChangeText={setContact}
-                placeholder="Email or phone (+1 555 123 4567)"
-                placeholderTextColor={Colors.textMuted}
-                autoCapitalize="none"
-                autoCorrect={false}
-                keyboardType="email-address"
-                style={styles.input}
-              />
-              <Button title="Send me a code" onPress={send} loading={busy === 'send'} disabled={!contact.trim()} />
-            </>
-          )}
+          <TextInput
+            value={email}
+            onChangeText={setEmail}
+            placeholder="Email"
+            placeholderTextColor={Colors.textMuted}
+            autoCapitalize="none"
+            autoCorrect={false}
+            autoComplete="email"
+            keyboardType="email-address"
+            style={styles.input}
+          />
+          <TextInput
+            value={password}
+            onChangeText={setPassword}
+            placeholder="Password (6+ characters)"
+            placeholderTextColor={Colors.textMuted}
+            secureTextEntry
+            autoComplete="password"
+            style={styles.input}
+          />
+          <Button
+            title="Sign in"
+            onPress={() => submit('sign-in')}
+            loading={busy === 'sign-in'}
+            disabled={!ready || busy !== null}
+          />
+          <Button
+            title="Create account"
+            variant="secondary"
+            onPress={() => submit('sign-up')}
+            loading={busy === 'sign-up'}
+            disabled={!ready || busy !== null}
+          />
           {error && (
             <AppText tone="danger" style={styles.center}>
               {error}
@@ -146,16 +133,6 @@ const styles = StyleSheet.create({
   actions: {
     gap: Spacing.three,
   },
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.two,
-  },
-  rule: {
-    flex: 1,
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: Colors.border,
-  },
   input: {
     backgroundColor: Colors.surface,
     borderRadius: Radius.pill,
@@ -165,11 +142,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     paddingHorizontal: Spacing.four,
     paddingVertical: Spacing.three,
-  },
-  code: {
-    textAlign: 'center',
-    fontSize: 24,
-    letterSpacing: 8,
   },
   center: {
     textAlign: 'center',
