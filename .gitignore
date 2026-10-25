@@ -1,3 +1,7 @@
 .env
 .env.local
 .DS_Store
+
+# The app's .env only holds public client values (API URL, Supabase URL and
+# publishable key), which end up in the app bundle anyway.
+!app/.env
