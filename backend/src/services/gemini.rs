@@ -1,5 +1,7 @@
 //! Gemini: interest profile embeddings and pairwise compatibility verdicts.
 
+use std::time::{Duration, Instant};
+
 use serde::{Deserialize, de::DeserializeOwned};
 use serde_json::{Value, json};
 
@@ -10,9 +12,12 @@ use crate::{
 };
 
 const API_BASE: &str = "https://generativelanguage.googleapis.com/v1beta";
-/// Gemini sheds load with 404/429/503s under high demand; one retry after a
-/// pause usually gets through.
-const JUDGE_RETRY_DELAY: std::time::Duration = std::time::Duration::from_secs(2);
+/// Longest we wait for a verdict before the matcher falls back to a local one.
+const JUDGE_TIMEOUT: Duration = Duration::from_secs(12);
+/// Under high demand Gemini sheds load with fast 404/429/503s; a failure this
+/// quick is worth one retry, a timeout is not.
+const QUICK_FAILURE: Duration = Duration::from_secs(3);
+const JUDGE_RETRY_DELAY: Duration = Duration::from_secs(1);
 const EMBEDDING_DIMENSIONS: u32 = 768;
 
 const JUDGE_INSTRUCTIONS: &str = "\
@@ -82,7 +87,7 @@ impl Gemini {
                 "outputDimensionality": EMBEDDING_DIMENSIONS,
             },
         });
-        let response: Response = self.post(&url, &body).await?;
+        let response: Response = self.post(&url, &body, None).await?;
         Ok(response.embedding.values)
     }
 
@@ -105,31 +110,43 @@ impl Gemini {
             "generationConfig": {
                 "responseMimeType": "application/json",
                 "responseSchema": judgement_schema(&allowed),
+                // Lowest level Gemini 3 Flash accepts; the verdict is a short
+                // rubric, not a puzzle.
+                "thinkingConfig": { "thinkingLevel": "low" },
             },
         });
+        let started = Instant::now();
         match self.try_judge(&url, &body).await {
             Ok(judgement) => Ok(judgement),
-            Err(err) => {
-                tracing::warn!(error = %err, "Gemini verdict failed; retrying once");
+            Err(err) if started.elapsed() < QUICK_FAILURE => {
+                tracing::warn!(error = %err, "Gemini verdict failed fast; retrying once");
                 tokio::time::sleep(JUDGE_RETRY_DELAY).await;
                 self.try_judge(&url, &body).await
             }
+            Err(err) => Err(err),
         }
     }
 
     async fn try_judge(&self, url: &str, body: &Value) -> AppResult<Judgement> {
-        let response: GenerateResponse = self.post(url, body).await?;
+        let response: GenerateResponse = self.post(url, body, Some(JUDGE_TIMEOUT)).await?;
         parse_judgement(response)
     }
 
-    async fn post<T: DeserializeOwned>(&self, url: &str, body: &Value) -> AppResult<T> {
-        let response = self
+    async fn post<T: DeserializeOwned>(
+        &self,
+        url: &str,
+        body: &Value,
+        timeout: Option<Duration>,
+    ) -> AppResult<T> {
+        let mut request = self
             .http
             .post(url)
             .header("x-goog-api-key", &self.config.api_key)
-            .json(body)
-            .send()
-            .await?;
+            .json(body);
+        if let Some(timeout) = timeout {
+            request = request.timeout(timeout);
+        }
+        let response = request.send().await?;
         let status = response.status();
         if !status.is_success() {
             let detail = response.text().await.unwrap_or_default();
