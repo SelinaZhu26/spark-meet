@@ -1,93 +1,112 @@
-import { LinearGradient } from 'expo-linear-gradient';
-import { ActivityIndicator, Pressable, StyleSheet, View, type ViewStyle } from 'react-native';
+import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
+import { Dots } from '@/components/ui/dots';
+import { Icon, type IconName } from '@/components/ui/icon';
+import { PressableScale } from '@/components/ui/pressable-scale';
 import { AppText } from '@/components/ui/text';
-import { Colors, Gradients, Radius, Spacing } from '@/constants/theme';
+import { Colors, Fonts, Radius, Spacing, Tones, Welcome } from '@/constants/theme';
 
 export type ButtonProps = {
   title: string;
   onPress: () => void;
-  variant?: 'primary' | 'dating' | 'secondary' | 'ghost';
+  /** `dark` and `light` are for buttons sitting on a pastel. */
+  variant?: 'primary' | 'dating' | 'dark' | 'ghost' | 'light';
+  size?: 'regular' | 'small';
   loading?: boolean;
   disabled?: boolean;
-  icon?: string;
-  style?: ViewStyle;
+  icon?: IconName;
+  style?: StyleProp<ViewStyle>;
 };
 
 export function Button({
   title,
   onPress,
   variant = 'primary',
+  size = 'regular',
   loading = false,
   disabled = false,
   icon,
   style,
 }: ButtonProps) {
   const inactive = disabled || loading;
-  const filled = variant === 'primary' || variant === 'dating';
-  const label = (
-    <View style={styles.content}>
-      {loading ? (
-        <ActivityIndicator color={filled ? Colors.background : Colors.text} />
-      ) : (
-        <AppText
-          variant="heading"
-          style={[styles.title, { color: filled ? Colors.background : Colors.text }]}>
-          {icon ? `${icon}  ${title}` : title}
-        </AppText>
-      )}
-    </View>
-  );
+  const color = foregrounds[variant];
+  const small = size === 'small';
 
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="button"
       accessibilityState={{ disabled: inactive, busy: loading }}
       onPress={onPress}
       disabled={inactive}
-      style={({ pressed }) => [
+      style={[
         styles.base,
-        variant === 'secondary' && styles.secondary,
-        { opacity: inactive ? 0.5 : pressed ? 0.85 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] },
+        small && styles.small,
+        styles[variant],
+        disabled && styles.disabled,
         style,
       ]}>
-      {filled ? (
-        <LinearGradient
-          colors={variant === 'dating' ? Gradients.dating : Gradients.ember}
-          start={{ x: 0, y: 0.5 }}
-          end={{ x: 1, y: 0.5 }}
-          style={styles.fill}>
-          {label}
-        </LinearGradient>
+      {loading ? (
+        <Dots color={color} size={small ? 5 : 7} />
       ) : (
-        label
+        <View style={styles.content}>
+          {icon && <Icon name={icon} size={small ? 16 : 20} color={color} />}
+          <AppText style={[styles.title, small && styles.smallTitle, { color }]}>{title}</AppText>
+        </View>
       )}
-    </Pressable>
+    </PressableScale>
   );
 }
 
+const foregrounds = {
+  primary: Colors.ink,
+  dating: Colors.ink,
+  dark: Colors.text,
+  ghost: Colors.text,
+  light: Colors.ink,
+} as const;
+
 const styles = StyleSheet.create({
   base: {
+    height: 52,
     borderRadius: Radius.pill,
-    overflow: 'hidden',
-    minHeight: 56,
+    alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: Spacing.four,
   },
-  secondary: {
+  small: {
+    height: 38,
+    paddingHorizontal: Spacing.three,
+  },
+  primary: {
+    backgroundColor: Tones.accent,
+  },
+  dating: {
+    backgroundColor: Tones.dating,
+  },
+  dark: {
+    backgroundColor: Colors.ink,
+  },
+  ghost: {
     backgroundColor: Colors.surfaceRaised,
-    borderWidth: 1,
-    borderColor: Colors.border,
   },
-  fill: {
-    flex: 1,
-    justifyContent: 'center',
+  light: {
+    backgroundColor: Welcome.fill,
+  },
+  disabled: {
+    opacity: 0.4,
   },
   content: {
-    paddingHorizontal: Spacing.four,
-    paddingVertical: Spacing.three,
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: Spacing.two,
   },
   title: {
-    fontSize: 17,
+    fontFamily: Fonts.semiBoldItalic,
+    fontSize: 19,
+    lineHeight: 23,
+  },
+  smallTitle: {
+    fontSize: 16,
+    lineHeight: 20,
   },
 });

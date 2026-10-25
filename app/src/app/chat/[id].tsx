@@ -4,15 +4,18 @@ import {
   FlatList,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   StyleSheet,
   TextInput,
   View,
 } from 'react-native';
+import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { blockPalette } from '@/components/spark-block';
+import { Button } from '@/components/ui/button';
+import { PressableScale } from '@/components/ui/pressable-scale';
 import { AppText } from '@/components/ui/text';
-import { Colors, Radius, Spacing } from '@/constants/theme';
+import { Colors, Fonts, Radius, Spacing, Tones } from '@/constants/theme';
 import { api, errorMessage } from '@/lib/api';
 import type { Message, Spark } from '@/lib/types';
 
@@ -26,6 +29,8 @@ export default function Chat() {
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Messages up to this id were already here when the chat opened; only newer ones animate in.
+  const [historyEnd, setHistoryEnd] = useState<number | null>(null);
   const lastId = useRef(0);
 
   const poll = useCallback(async () => {
@@ -44,7 +49,7 @@ export default function Chat() {
 
   useEffect(() => {
     api.spark(id).then(setSpark, (err) => setError(errorMessage(err)));
-    poll();
+    poll().then(() => setHistoryEnd(lastId.current));
     const timer = setInterval(poll, POLL_MS);
     return () => clearInterval(timer);
   }, [id, poll]);
@@ -67,32 +72,50 @@ export default function Chat() {
     }
   };
 
+  const dating = spark?.mode === 'dating';
+
   return (
     <KeyboardAvoidingView
       style={styles.screen}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}>
-      <Stack.Screen options={{ title: spark?.other?.display_name ?? 'Chat' }} />
+      <Stack.Screen options={{ title: spark?.other?.display_name ?? '' }} />
       <FlatList
         data={[...messages].reverse()}
         inverted
         keyExtractor={(message) => String(message.id)}
+        extraData={[historyEnd, dating]}
         contentContainerStyle={styles.list}
         renderItem={({ item }) => (
-          <View style={[styles.bubble, item.from_me ? styles.mine : styles.theirs]}>
-            <AppText style={item.from_me ? styles.mineText : undefined}>{item.body}</AppText>
-          </View>
+          <Animated.View
+            // The list is inverted, so "up" here rises from the bottom on screen.
+            entering={
+              historyEnd !== null && item.id > historyEnd
+                ? FadeInUp.springify().damping(18)
+                : undefined
+            }
+            style={[
+              styles.bubble,
+              item.from_me
+                ? [styles.mine, { backgroundColor: dating ? Tones.dating : Tones.accent }]
+                : styles.theirs,
+            ]}>
+            <AppText style={item.from_me && styles.mineText}>{item.body}</AppText>
+          </Animated.View>
         )}
         ListFooterComponent={
           messages.length === 0 && spark ? (
-            <View style={styles.starter}>
-              <AppText variant="caption" tone="muted">
-                You matched on {spark.shared_interests.join(', ').toLowerCase()}. Break the ice:
+            <PressableScale
+              accessibilityRole="button"
+              accessibilityHint="Sends the icebreaker"
+              onPress={() => send(spark.icebreaker)}
+              disabled={sending}
+              style={[styles.starter, { backgroundColor: blockPalette(spark.id, spark.mode)[0] }]}>
+              <AppText variant="label" tone="ink">
+                tap to send
               </AppText>
-              <Pressable onPress={() => send(spark.icebreaker)} style={styles.suggestion}>
-                <AppText>“{spark.icebreaker}”</AppText>
-              </Pressable>
-            </View>
+              <AppText style={styles.starterText}>{spark.icebreaker}</AppText>
+            </PressableScale>
           ) : undefined
         }
       />
@@ -105,23 +128,20 @@ export default function Chat() {
         <TextInput
           value={draft}
           onChangeText={setDraft}
-          placeholder="Message"
+          placeholder="say something..."
           placeholderTextColor={Colors.textMuted}
           multiline
           maxLength={2000}
           style={styles.input}
         />
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Send"
+        <Button
+          title="send"
+          variant={dating ? 'dating' : 'primary'}
+          loading={sending}
+          disabled={!draft.trim()}
           onPress={() => send()}
-          disabled={sending || !draft.trim()}
-          style={({ pressed }) => [
-            styles.send,
-            (pressed || sending || !draft.trim()) && styles.sendDisabled,
-          ]}>
-          <AppText style={styles.sendText}>↑</AppText>
-        </Pressable>
+          style={styles.send}
+        />
       </View>
     </KeyboardAvoidingView>
   );
@@ -140,15 +160,14 @@ const styles = StyleSheet.create({
     maxWidth: '80%',
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two + 2,
-    borderRadius: Radius.medium + 4,
+    borderRadius: Radius.medium,
   },
   mine: {
     alignSelf: 'flex-end',
-    backgroundColor: Colors.ember,
     borderBottomRightRadius: 6,
   },
   mineText: {
-    color: Colors.background,
+    color: Colors.ink,
   },
   theirs: {
     alignSelf: 'flex-start',
@@ -156,16 +175,16 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 6,
   },
   starter: {
-    alignItems: 'center',
     gap: Spacing.two,
-    paddingVertical: Spacing.five,
+    padding: Spacing.three + 6,
+    marginVertical: Spacing.four,
+    borderRadius: Radius.large,
   },
-  suggestion: {
-    padding: Spacing.three,
-    borderRadius: Radius.medium,
-    borderWidth: 1,
-    borderColor: Colors.ember,
-    borderStyle: 'dashed',
+  starterText: {
+    fontFamily: Fonts.semiBoldItalic,
+    fontSize: 25,
+    lineHeight: 30,
+    color: Colors.ink,
   },
   error: {
     textAlign: 'center',
@@ -177,36 +196,24 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
     paddingHorizontal: Spacing.three,
     paddingTop: Spacing.two,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: Colors.border,
   },
   input: {
     flex: 1,
+    minHeight: 46,
     maxHeight: 120,
     backgroundColor: Colors.surface,
-    borderRadius: Radius.large,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    borderRadius: 23,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: Colors.line,
     color: Colors.text,
-    fontSize: 16,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two + 2,
+    fontFamily: Fonts.medium,
+    fontSize: 18,
+    paddingHorizontal: Spacing.three + 2,
+    paddingTop: Spacing.two + 4,
+    paddingBottom: Spacing.two + 4,
   },
   send: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.ember,
-  },
-  sendDisabled: {
-    opacity: 0.5,
-  },
-  sendText: {
-    fontSize: 22,
-    lineHeight: 26,
-    fontWeight: 800,
-    color: Colors.background,
+    height: 46,
+    paddingHorizontal: Spacing.three + 4,
   },
 });

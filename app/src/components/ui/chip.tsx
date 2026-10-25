@@ -1,49 +1,55 @@
-import { Pressable, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 
+import { PressableScale } from '@/components/ui/pressable-scale';
 import { AppText } from '@/components/ui/text';
-import { Colors, Radius, Spacing } from '@/constants/theme';
+import { Colors, Fonts, Radius, Spacing, Tones, Welcome, type Tone } from '@/constants/theme';
 
 export type ChipProps = {
   label: string;
   selected?: boolean;
-  tone?: 'ember' | 'dating';
+  tone?: Tone;
+  /** For chips on the light screens. */
+  light?: boolean;
   onPress?: () => void;
 };
 
-export function Chip({ label, selected = false, tone = 'ember', onPress }: ChipProps) {
-  const accent = tone === 'dating' ? Colors.dating : Colors.ember;
+export function Chip({
+  label,
+  selected = false,
+  tone = 'accent',
+  light = false,
+  onPress,
+}: ChipProps) {
+  const fill = selected
+    ? light
+      ? Colors.ink
+      : Tones[tone]
+    : light
+      ? Welcome.fill
+      : Colors.surfaceRaised;
+  const color = selected ? (light ? Colors.text : Colors.ink) : light ? Colors.ink : Colors.text;
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole={onPress ? 'button' : 'text'}
       accessibilityState={onPress ? { selected } : undefined}
       disabled={!onPress}
       onPress={onPress}
-      style={({ pressed }) => [
-        styles.chip,
-        selected && { backgroundColor: `${accent}26`, borderColor: accent },
-        pressed && styles.pressed,
-      ]}>
-      <AppText variant="caption" style={[styles.label, selected && { color: Colors.text }]}>
-        {label}
-      </AppText>
-    </Pressable>
+      pressedScale={0.92}
+      style={[styles.chip, { backgroundColor: fill }]}>
+      <AppText style={[styles.label, { color }]}>{label}</AppText>
+    </PressableScale>
   );
 }
 
 const styles = StyleSheet.create({
   chip: {
     borderRadius: Radius.pill,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    backgroundColor: Colors.surface,
     paddingHorizontal: Spacing.three - 2,
     paddingVertical: Spacing.two,
   },
   label: {
-    color: Colors.textSecondary,
-    fontWeight: 700,
-  },
-  pressed: {
-    opacity: 0.7,
+    fontFamily: Fonts.medium,
+    fontSize: 16,
+    lineHeight: 20,
   },
 });

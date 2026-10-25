@@ -1,8 +1,10 @@
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { Button, type ButtonProps } from '@/components/ui/button';
+import { Dots } from '@/components/ui/dots';
+import { Sparky } from '@/components/ui/sparky';
 import { AppText } from '@/components/ui/text';
-import { Colors, Spacing } from '@/constants/theme';
+import { Colors, Spacing, Tones } from '@/constants/theme';
 
 export type StatusScreenProps = {
   title?: string;
@@ -10,13 +12,13 @@ export type StatusScreenProps = {
   actions?: Pick<ButtonProps, 'title' | 'onPress' | 'variant'>[];
 };
 
-/** Full-screen loading or error state. Shows a spinner when there's no title. */
+/** Full-screen loading or error state. Shows the loader when there's no title. */
 export function StatusScreen({ title, message, actions = [] }: StatusScreenProps) {
   return (
     <View style={styles.screen}>
       {title ? (
         <>
-          <AppText style={styles.bolt}>⚡</AppText>
+          <Sparky size={52} sleepy />
           <AppText variant="title" style={styles.center}>
             {title}
           </AppText>
@@ -30,7 +32,7 @@ export function StatusScreen({ title, message, actions = [] }: StatusScreenProps
           ))}
         </>
       ) : (
-        <ActivityIndicator size="large" color={Colors.flame} />
+        <Dots color={Tones.accent} size={10} />
       )}
     </View>
   );
@@ -44,10 +46,6 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
     padding: Spacing.four,
     backgroundColor: Colors.background,
-  },
-  bolt: {
-    fontSize: 56,
-    lineHeight: 68,
   },
   center: {
     textAlign: 'center',

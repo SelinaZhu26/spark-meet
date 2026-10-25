@@ -1,40 +1,45 @@
 import { Link } from 'expo-router';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
+import { SparkCover } from '@/components/spark-block';
 import { Avatar } from '@/components/ui/avatar';
+import { PressableScale } from '@/components/ui/pressable-scale';
 import { AppText } from '@/components/ui/text';
-import { Colors, Radius, Spacing } from '@/constants/theme';
+import { Fonts, Spacing, Tones } from '@/constants/theme';
 import type { Spark } from '@/lib/types';
 
+/** Anonymous sparks get a cover; people you've met get their avatar. */
 export function SparkRow({ spark }: { spark: Spark }) {
   const dating = spark.mode === 'dating';
-  const title = spark.other?.display_name ?? spark.shared_interests.slice(0, 2).join(' · ');
-  const status = spark.connected ? 'Connected — say hi' : spark.waved ? 'You waved' : 'Tap to see what you share';
+  const title = spark.other?.display_name ?? spark.shared_interests.slice(0, 2).join(', ');
+  const status = spark.connected ? 'mutual' : spark.waved ? 'waved' : 'new';
+  const fresh = !spark.waved && !spark.connected;
 
   return (
     <Link href={{ pathname: '/spark/[id]', params: { id: spark.id } }} asChild>
-      <Pressable style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
+      <PressableScale pressedScale={0.97} style={styles.row}>
         {spark.other ? (
           <Avatar name={spark.other.display_name} url={spark.other.avatar_url} size={48} />
         ) : (
-          <View style={[styles.badge, dating && styles.badgeDating]}>
-            <AppText style={styles.badgeIcon}>{dating ? '💗' : '⚡'}</AppText>
-          </View>
+          <SparkCover seed={spark.id} mode={spark.mode} size={48} />
         )}
         <View style={styles.text}>
-          <AppText variant="heading" numberOfLines={1}>
-            {title || 'A spark'}
+          <AppText numberOfLines={1} style={styles.title}>
+            {title || 'a spark'}
           </AppText>
-          <AppText variant="caption" tone={spark.connected ? 'ember' : 'secondary'}>
-            {status}
-          </AppText>
+          <View style={styles.meta}>
+            {fresh && (
+              <View
+                style={[styles.dot, { backgroundColor: dating ? Tones.dating : Tones.accent }]}
+              />
+            )}
+            <AppText variant="caption" tone="secondary">
+              {dating ? 'dating' : 'friends'} · {status}
+            </AppText>
+          </View>
         </View>
-        <View style={[styles.score, dating && styles.scoreDating]}>
-          <AppText variant="caption" style={styles.scoreText}>
-            {spark.score}
-          </AppText>
-        </View>
-      </Pressable>
+        <AppText style={styles.score}>{spark.score}%</AppText>
+      </PressableScale>
     </Link>
   );
 }
@@ -43,48 +48,30 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.three,
-    padding: Spacing.three,
-    borderRadius: Radius.medium,
-    backgroundColor: Colors.surface,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  pressed: {
-    backgroundColor: Colors.surfaceRaised,
-  },
-  badge: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: `${Colors.ember}26`,
-  },
-  badgeDating: {
-    backgroundColor: Colors.datingSoft,
-  },
-  badgeIcon: {
-    fontSize: 22,
-    lineHeight: 28,
+    gap: Spacing.three - 4,
   },
   text: {
     flex: 1,
-    gap: 2,
+    gap: Spacing.half,
+  },
+  title: {
+    fontFamily: Fonts.semiBold,
+    fontSize: 18,
+    lineHeight: 22,
+  },
+  meta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.one + 2,
+  },
+  dot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
   },
   score: {
-    minWidth: 40,
-    paddingHorizontal: Spacing.two,
-    paddingVertical: Spacing.one,
-    borderRadius: Radius.pill,
-    backgroundColor: Colors.ember,
-    alignItems: 'center',
-  },
-  scoreDating: {
-    backgroundColor: Colors.dating,
-  },
-  scoreText: {
-    color: Colors.background,
-    fontWeight: 800,
+    fontFamily: Fonts.semiBold,
+    fontSize: 20,
+    lineHeight: 24,
   },
 });

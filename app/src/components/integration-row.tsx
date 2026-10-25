@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
+import { Button } from '@/components/ui/button';
 import { AppText } from '@/components/ui/text';
-import { Colors, Radius, Spacing } from '@/constants/theme';
+import { Colors, Fonts, Spacing } from '@/constants/theme';
 import { api, errorMessage } from '@/lib/api';
 import { connectIntegration, providerInfo } from '@/lib/integrations';
 import type { Integration, Provider } from '@/lib/types';
@@ -27,9 +28,9 @@ export function IntegrationRow({ provider, integration, onChanged }: Integration
       } else {
         const result = await connectIntegration(provider);
         if (result === 'error') {
-          setNote(`Couldn't read your ${info.label} account. Try again?`);
+          setNote(`couldn't read your ${info.label} account. try again?`);
         } else if (result === 'denied') {
-          setNote('No worries, nothing was linked.');
+          setNote('nothing was linked.');
         }
       }
       onChanged();
@@ -42,26 +43,22 @@ export function IntegrationRow({ provider, integration, onChanged }: Integration
 
   return (
     <View style={styles.row}>
-      <View style={[styles.dot, { backgroundColor: info.color }]} />
+      <View style={[styles.logo, { backgroundColor: info.color }]}>
+        <AppText style={styles.logoText}>{info.label.charAt(0)}</AppText>
+      </View>
       <View style={styles.text}>
-        <AppText variant="heading">{info.label}</AppText>
-        <AppText variant="caption" tone="secondary" numberOfLines={3}>
-          {note ?? integration?.summary ?? info.pitch}
+        <AppText style={styles.title}>{info.label}</AppText>
+        <AppText variant="caption" tone="secondary" numberOfLines={2}>
+          {note ?? integration?.summary ?? info.pitch.toLowerCase()}
         </AppText>
       </View>
-      <Pressable
-        accessibilityRole="button"
+      <Button
+        title={integration ? 'unlink' : 'link'}
+        variant={integration ? 'ghost' : 'primary'}
+        size="small"
+        loading={busy}
         onPress={toggle}
-        disabled={busy}
-        style={({ pressed }) => [
-          styles.action,
-          integration && styles.actionConnected,
-          (pressed || busy) && styles.pressed,
-        ]}>
-        <AppText variant="caption" style={styles.actionText}>
-          {busy ? '…' : integration ? 'Unlink' : 'Link'}
-        </AppText>
-      </Pressable>
+      />
     </View>
   );
 }
@@ -70,31 +67,28 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.three,
+    gap: Spacing.three - 4,
   },
-  dot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+  logo: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoText: {
+    fontFamily: Fonts.semiBoldItalic,
+    fontSize: 22,
+    lineHeight: 26,
+    color: Colors.ink,
   },
   text: {
     flex: 1,
-    gap: 2,
+    gap: Spacing.half,
   },
-  action: {
-    borderRadius: Radius.pill,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two,
-    backgroundColor: Colors.ember,
-  },
-  actionConnected: {
-    backgroundColor: Colors.surfaceRaised,
-  },
-  actionText: {
-    fontWeight: 800,
-    color: Colors.text,
-  },
-  pressed: {
-    opacity: 0.6,
+  title: {
+    fontFamily: Fonts.semiBold,
+    fontSize: 18,
+    lineHeight: 22,
   },
 });

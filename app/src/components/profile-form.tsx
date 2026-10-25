@@ -2,39 +2,20 @@ import { useState } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
 
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { Chip } from '@/components/ui/chip';
 import { AppText } from '@/components/ui/text';
-import { Colors, Radius, Spacing } from '@/constants/theme';
+import { Colors, Fonts, Radius, Spacing } from '@/constants/theme';
 import { api, errorMessage } from '@/lib/api';
+import {
+  MAX_INTERESTS,
+  SUGGESTED_INTERESTS,
+  cleanInterest,
+  isSuggested,
+  sameInterest,
+  toggleInterest,
+} from '@/lib/interests';
 import type { Me, ProfileInput } from '@/lib/types';
-
-const SUGGESTED_INTERESTS = [
-  'Bouldering',
-  'Running',
-  'Cycling',
-  'Hiking',
-  'Yoga',
-  'Tennis',
-  'Board games',
-  'Chess',
-  'Gaming',
-  'Anime',
-  'Indie music',
-  'Jazz',
-  'Hip-hop',
-  'Photography',
-  'Film',
-  'Reading',
-  'Cooking',
-  'Coffee',
-  'Startups',
-  'AI',
-  'Open source',
-  'Design',
-  'Thrifting',
-  'Travel',
-];
-const MAX_INTERESTS = 20;
 
 export type ProfileFormProps = {
   initial: ProfileInput;
@@ -52,23 +33,12 @@ export function ProfileForm({ initial, submitLabel, onSaved }: ProfileFormProps)
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const has = (interest: string) =>
-    interests.some((existing) => existing.toLowerCase() === interest.toLowerCase());
-
-  const toggleInterest = (interest: string) => {
-    setInterests((current) =>
-      has(interest)
-        ? current.filter((existing) => existing.toLowerCase() !== interest.toLowerCase())
-        : current.length < MAX_INTERESTS
-          ? [...current, interest]
-          : current
-    );
-  };
+  const has = (interest: string) => interests.some((existing) => sameInterest(existing, interest));
 
   const addCustom = () => {
-    const interest = custom.trim().replace(/\s+/g, ' ');
+    const interest = cleanInterest(custom);
     if (interest && !has(interest)) {
-      toggleInterest(interest);
+      setInterests((current) => toggleInterest(current, interest));
     }
     setCustom('');
   };
@@ -94,66 +64,77 @@ export function ProfileForm({ initial, submitLabel, onSaved }: ProfileFormProps)
     }
   };
 
-  const customInterests = interests.filter(
-    (interest) => !SUGGESTED_INTERESTS.some((s) => s.toLowerCase() === interest.toLowerCase())
-  );
+  const options = [
+    ...SUGGESTED_INTERESTS.map(({ name }) => name),
+    ...interests.filter((interest) => !isSuggested(interest)),
+  ];
 
   return (
     <View style={styles.form}>
-      <Field label="First name" hint="Only shown after you both wave.">
-        <TextInput
-          value={displayName}
-          onChangeText={setDisplayName}
-          placeholder="Alex"
-          placeholderTextColor={Colors.textMuted}
-          maxLength={40}
-          autoComplete="given-name"
-          style={styles.input}
-        />
-      </Field>
+      <Card>
+        <Field label="first name">
+          <TextInput
+            value={displayName}
+            onChangeText={setDisplayName}
+            placeholder="your name"
+            placeholderTextColor={Colors.textMuted}
+            maxLength={40}
+            autoComplete="given-name"
+            style={styles.input}
+          />
+        </Field>
+        <Field label="about you">
+          <TextInput
+            value={bio}
+            onChangeText={setBio}
+            placeholder="learning to climb, obsessed with film photography, always down for ramen"
+            placeholderTextColor={Colors.textMuted}
+            maxLength={300}
+            multiline
+            style={[styles.input, styles.multiline]}
+          />
+        </Field>
+      </Card>
 
-      <Field label="About you" hint="What would you talk about for hours?">
-        <TextInput
-          value={bio}
-          onChangeText={setBio}
-          placeholder="Learning to climb, obsessed with film photography, always down for ramen."
-          placeholderTextColor={Colors.textMuted}
-          maxLength={300}
-          multiline
-          style={[styles.input, styles.multiline]}
-        />
-      </Field>
+      <Card>
+        <Field label="interests" aside={`${interests.length}/${MAX_INTERESTS}`}>
+          <View style={styles.chips}>
+            {options.map((interest) => (
+              <Chip
+                key={interest}
+                label={interest}
+                selected={has(interest)}
+                onPress={() => setInterests((current) => toggleInterest(current, interest))}
+              />
+            ))}
+          </View>
+          <TextInput
+            value={custom}
+            onChangeText={setCustom}
+            onSubmitEditing={addCustom}
+            placeholder="add your own"
+            placeholderTextColor={Colors.textMuted}
+            maxLength={40}
+            returnKeyType="done"
+            submitBehavior="submit"
+            style={styles.input}
+          />
+        </Field>
+      </Card>
 
-      <Field label={`Interests · ${interests.length}/${MAX_INTERESTS}`} hint="The more specific, the better the sparks.">
-        <View style={styles.chips}>
-          {[...SUGGESTED_INTERESTS, ...customInterests].map((interest) => (
+      <Card>
+        <Field label="looking for">
+          <View style={styles.chips}>
+            <Chip label="🤝 friends" selected={friends} onPress={() => setFriends(!friends)} />
             <Chip
-              key={interest}
-              label={interest}
-              selected={has(interest)}
-              onPress={() => toggleInterest(interest)}
+              label="💗 dating"
+              tone="dating"
+              selected={dating}
+              onPress={() => setDating(!dating)}
             />
-          ))}
-        </View>
-        <TextInput
-          value={custom}
-          onChangeText={setCustom}
-          onSubmitEditing={addCustom}
-          placeholder="Add your own, e.g. Radiohead, sourdough, F1"
-          placeholderTextColor={Colors.textMuted}
-          maxLength={40}
-          returnKeyType="done"
-          submitBehavior="submit"
-          style={styles.input}
-        />
-      </Field>
-
-      <Field label="Looking for" hint="Separate pools. Dating sparks only happen between two people who both opted in.">
-        <View style={styles.chips}>
-          <Chip label="🤝  Friends" selected={friends} onPress={() => setFriends(!friends)} />
-          <Chip label="💗  Dating" tone="dating" selected={dating} onPress={() => setDating(!dating)} />
-        </View>
-      </Field>
+          </View>
+        </Field>
+      </Card>
 
       {error && <AppText tone="danger">{error}</AppText>}
 
@@ -167,17 +148,27 @@ export function ProfileForm({ initial, submitLabel, onSaved }: ProfileFormProps)
   );
 }
 
-function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
+function Field({
+  label,
+  aside,
+  children,
+}: {
+  label: string;
+  aside?: string;
+  children: React.ReactNode;
+}) {
   return (
     <View style={styles.field}>
-      <AppText variant="label" tone="secondary">
-        {label}
-      </AppText>
-      {hint && (
-        <AppText variant="caption" tone="muted">
-          {hint}
+      <View style={styles.fieldHeader}>
+        <AppText variant="label" tone="secondary">
+          {label}
         </AppText>
-      )}
+        {aside && (
+          <AppText variant="caption" tone="muted">
+            {aside}
+          </AppText>
+        )}
+      </View>
       {children}
     </View>
   );
@@ -185,23 +176,30 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
 
 const styles = StyleSheet.create({
   form: {
-    gap: Spacing.four,
+    gap: Spacing.three - 4,
   },
   field: {
     gap: Spacing.two,
   },
+  fieldHeader: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
+  },
   input: {
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.medium,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    minHeight: 50,
+    backgroundColor: Colors.surfaceRaised,
+    borderRadius: Radius.small,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: Colors.line,
     color: Colors.text,
-    fontSize: 16,
+    fontFamily: Fonts.medium,
+    fontSize: 18,
     paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.three - 2,
+    paddingVertical: Spacing.three - 3,
   },
   multiline: {
-    minHeight: 96,
+    minHeight: 104,
     textAlignVertical: 'top',
   },
   chips: {

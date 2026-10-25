@@ -10,9 +10,9 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: Colors.surface,
     borderRadius: Radius.large,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    padding: Spacing.four,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: Colors.line,
+    padding: Spacing.three + 2,
     gap: Spacing.three,
   },
 });

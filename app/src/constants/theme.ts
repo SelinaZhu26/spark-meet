@@ -1,37 +1,68 @@
 /**
- * Spark is always dark: a warm, low-light canvas so the ember glow pops.
+ * Spark is always dark: a deep plum canvas with bright pastel color blocks
+ * and shapes on top. Nothing casts a shadow.
  */
 
-import { Platform } from 'react-native';
-
 export const Colors = {
-  background: '#0D0907',
-  surface: '#1A1310',
-  surfaceRaised: '#251B16',
-  border: '#3A2A22',
-  text: '#FFF4EC',
-  textSecondary: '#B9A79C',
-  textMuted: '#7C6B61',
-  ember: '#FF6A1F',
-  flame: '#FFB23F',
-  glow: '#FFD873',
-  dating: '#FF4F8B',
-  datingSoft: '#3A1424',
-  danger: '#FF5A5A',
-  success: '#5EE6A0',
+  background: '#17111D',
+  surface: '#211A29',
+  surfaceRaised: '#2D2436',
+  line: 'rgba(255, 255, 255, 0.09)',
+  text: '#FFFFFF',
+  textSecondary: '#B3A7BF',
+  textMuted: '#7D7088',
+  /** Text and icons drawn on a pastel. */
+  ink: '#22182A',
+  yellow: '#FFD97A',
+  pink: '#FF8FB8',
+  lime: '#B5E48C',
+  purple: '#A18BFF',
+  teal: '#7FDCD0',
+  orange: '#FFA173',
+  danger: '#FF6B81',
 } as const;
 
-/** Friends get the ember gradient, dating gets a rose one. */
-export const Gradients = {
-  ember: ['#FF4D1A', '#FF8A1F', '#FFC23F'],
-  dating: ['#FF3D7F', '#FF6A9A', '#FFB0A0'],
-  ash: ['#2A1F1A', '#1A1310'],
+/** Friends sparks and the brand are yellow, dating sparks are pink. */
+export const Tones = {
+  accent: Colors.yellow,
+  dating: Colors.pink,
 } as const;
 
-export const Fonts = Platform.select({
-  ios: { rounded: 'ui-rounded', mono: 'ui-monospace' },
-  default: { rounded: 'normal', mono: 'monospace' },
-});
+export type Tone = keyof typeof Tones;
+
+type BlockPalette = readonly [background: string, first: string, second: string];
+
+/** Color blocks: a background and two shape colors. Dating blocks stay pink and purple. */
+export const BlockPalettes: Record<'friends' | 'dating', readonly BlockPalette[]> = {
+  friends: [
+    [Colors.yellow, Colors.purple, Colors.ink],
+    [Colors.lime, Colors.pink, Colors.ink],
+    [Colors.teal, Colors.yellow, Colors.ink],
+    [Colors.orange, Colors.yellow, Colors.purple],
+  ],
+  dating: [
+    [Colors.pink, Colors.purple, Colors.ink],
+    [Colors.purple, Colors.pink, Colors.yellow],
+  ],
+};
+
+/** The light screens you see before signing in. */
+export const Welcome = {
+  gradient: ['#FFE9A6', '#FFF4EC', '#E7DCFF'],
+  /** Ink at 8% and 20%: input fills and borders on the light screens. */
+  fill: 'rgba(34, 24, 42, 0.08)',
+  border: 'rgba(34, 24, 42, 0.2)',
+} as const;
+
+/** Crimson Pro, loaded in the root layout. Each weight is its own family. */
+export const Fonts = {
+  regular: 'CrimsonPro_400Regular',
+  medium: 'CrimsonPro_500Medium',
+  semiBold: 'CrimsonPro_600SemiBold',
+  bold: 'CrimsonPro_700Bold',
+  italic: 'CrimsonPro_500Medium_Italic',
+  semiBoldItalic: 'CrimsonPro_600SemiBold_Italic',
+} as const;
 
 export const Spacing = {
   half: 2,
@@ -44,8 +75,22 @@ export const Spacing = {
 } as const;
 
 export const Radius = {
-  small: 10,
-  medium: 16,
-  large: 28,
+  small: 14,
+  medium: 20,
+  large: 26,
   pill: 999,
 } as const;
+
+/** Every press, pop and slide uses one of these, so motion feels like one system. */
+export const Springs = {
+  press: { duration: 280, dampingRatio: 0.65 },
+  pop: { duration: 520, dampingRatio: 0.55 },
+  slide: { duration: 420, dampingRatio: 0.9 },
+} as const;
+
+/** `#RRGGBB` plus an opacity, as `#RRGGBBAA`. */
+export function alpha(hex: string, opacity: number) {
+  return `${hex}${Math.round(opacity * 255)
+    .toString(16)
+    .padStart(2, '0')}`;
+}

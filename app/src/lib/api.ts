@@ -75,8 +75,6 @@ export const api = {
 
 export const buzzUrl = `${API_URL}/audio/spark.mp3`;
 
-export const icebreakerUrl = (id: string) => `${API_URL}/sparks/${id}/icebreaker.mp3`;
-
 export function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : 'Something went wrong.';
 }
