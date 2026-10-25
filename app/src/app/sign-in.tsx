@@ -4,6 +4,7 @@ import { KeyboardAvoidingView, Platform, StyleSheet, TextInput, View } from 'rea
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/ui/button';
+import { Divider } from '@/components/ui/ornament';
 import { AppText } from '@/components/ui/text';
 import { Colors, Gradients, Radius, Spacing } from '@/constants/theme';
 import { errorMessage } from '@/lib/api';
@@ -35,73 +36,72 @@ export default function SignIn() {
   const ready = email.includes('@') && password.length >= 6;
 
   return (
-    <SafeAreaView style={styles.screen}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.content}>
-        <View style={styles.hero}>
-          <LinearGradient
-            colors={Gradients.ember}
-            style={styles.logo}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}>
-            <AppText style={styles.bolt}>⚡</AppText>
-          </LinearGradient>
-          <AppText variant="display">spark</AppText>
-          <AppText tone="secondary" style={styles.tagline}>
-            The people you&apos;d click with are already around you. Spark buzzes when one walks by.
-          </AppText>
-        </View>
-
-        <View style={styles.actions}>
-          <TextInput
-            value={email}
-            onChangeText={setEmail}
-            placeholder="Email"
-            placeholderTextColor={Colors.textMuted}
-            autoCapitalize="none"
-            autoCorrect={false}
-            autoComplete="email"
-            keyboardType="email-address"
-            style={styles.input}
-          />
-          <TextInput
-            value={password}
-            onChangeText={setPassword}
-            placeholder="Password (6+ characters)"
-            placeholderTextColor={Colors.textMuted}
-            secureTextEntry
-            autoComplete="password"
-            style={styles.input}
-          />
-          <Button
-            title="Sign in"
-            onPress={() => submit('sign-in')}
-            loading={busy === 'sign-in'}
-            disabled={!ready || busy !== null}
-          />
-          <Button
-            title="Create account"
-            variant="secondary"
-            onPress={() => submit('sign-up')}
-            loading={busy === 'sign-up'}
-            disabled={!ready || busy !== null}
-          />
-          {error && (
-            <AppText tone="danger" style={styles.center}>
-              {error}
+    <LinearGradient colors={Gradients.sky} style={styles.screen}>
+      <SafeAreaView style={styles.screen}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={styles.content}>
+          <View style={styles.hero}>
+            <AppText tone="brass" style={styles.glyph}>
+              ✦
             </AppText>
-          )}
-        </View>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+            <AppText variant="display">Spark</AppText>
+            <Divider style={styles.divider} />
+            <AppText tone="secondary" style={styles.tagline}>
+              The people you&apos;d click with are already around you. Spark buzzes when one walks by.
+            </AppText>
+          </View>
+
+          <View style={styles.actions}>
+            <TextInput
+              value={email}
+              onChangeText={setEmail}
+              placeholder="Email"
+              placeholderTextColor={Colors.textMuted}
+              autoCapitalize="none"
+              autoCorrect={false}
+              autoComplete="email"
+              keyboardType="email-address"
+              style={styles.input}
+            />
+            <TextInput
+              value={password}
+              onChangeText={setPassword}
+              placeholder="Password (6+ characters)"
+              placeholderTextColor={Colors.textMuted}
+              secureTextEntry
+              autoComplete="password"
+              style={styles.input}
+            />
+            <Button
+              title="Sign in"
+              icon="confirm"
+              onPress={() => submit('sign-in')}
+              loading={busy === 'sign-in'}
+              disabled={!ready || busy !== null}
+            />
+            <Button
+              title="Create account"
+              variant="secondary"
+              onPress={() => submit('sign-up')}
+              loading={busy === 'sign-up'}
+              disabled={!ready || busy !== null}
+            />
+            {error && (
+              <AppText tone="danger" style={styles.center}>
+                {error}
+              </AppText>
+            )}
+          </View>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   content: {
     flex: 1,
@@ -114,17 +114,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: Spacing.three,
   },
-  logo: {
-    width: 112,
-    height: 112,
-    borderRadius: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-    transform: [{ rotate: '-8deg' }],
+  glyph: {
+    fontSize: 48,
+    lineHeight: 56,
   },
-  bolt: {
-    fontSize: 60,
-    lineHeight: 72,
+  divider: {
+    width: 200,
   },
   tagline: {
     textAlign: 'center',
@@ -134,10 +129,10 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
   },
   input: {
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.pill,
+    backgroundColor: `${Colors.background}CC`,
+    borderRadius: Radius.medium,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: `${Colors.brass}59`,
     color: Colors.text,
     fontSize: 16,
     paddingHorizontal: Spacing.four,

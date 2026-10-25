@@ -7,7 +7,7 @@ import { Colors, Spacing } from '@/constants/theme';
 export type StatusScreenProps = {
   title?: string;
   message?: string | null;
-  actions?: Pick<ButtonProps, 'title' | 'onPress' | 'variant'>[];
+  actions?: Pick<ButtonProps, 'title' | 'onPress' | 'variant' | 'icon'>[];
 };
 
 /** Full-screen loading or error state. Shows a spinner when there's no title. */
@@ -16,7 +16,9 @@ export function StatusScreen({ title, message, actions = [] }: StatusScreenProps
     <View style={styles.screen}>
       {title ? (
         <>
-          <AppText style={styles.bolt}>⚡</AppText>
+          <AppText tone="brass" style={styles.glyph}>
+            ✦
+          </AppText>
           <AppText variant="title" style={styles.center}>
             {title}
           </AppText>
@@ -30,7 +32,7 @@ export function StatusScreen({ title, message, actions = [] }: StatusScreenProps
           ))}
         </>
       ) : (
-        <ActivityIndicator size="large" color={Colors.flame} />
+        <ActivityIndicator size="large" color={Colors.brass} />
       )}
     </View>
   );
@@ -45,9 +47,9 @@ const styles = StyleSheet.create({
     padding: Spacing.four,
     backgroundColor: Colors.background,
   },
-  bolt: {
-    fontSize: 56,
-    lineHeight: 68,
+  glyph: {
+    fontSize: 52,
+    lineHeight: 62,
   },
   center: {
     textAlign: 'center',

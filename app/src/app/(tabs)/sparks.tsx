@@ -3,11 +3,16 @@ import { useCallback, useState } from 'react';
 import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { SparkRow } from '@/components/spark-row';
+import { SparkCard } from '@/components/spark-card';
+import { Diamond, Divider } from '@/components/ui/ornament';
 import { AppText } from '@/components/ui/text';
 import { Colors, Spacing } from '@/constants/theme';
 import { api, errorMessage } from '@/lib/api';
 import type { Spark } from '@/lib/types';
+
+const COLUMNS = 3;
+/** Space between cards; each tile pads half of it on either side. */
+const GAP = 10;
 
 export default function Sparks() {
   const [sparks, setSparks] = useState<Spark[] | null>(null);
@@ -40,24 +45,35 @@ export default function Sparks() {
       <FlatList
         data={sparks ?? []}
         keyExtractor={(spark) => spark.id}
-        renderItem={({ item }) => <SparkRow spark={item} />}
+        numColumns={COLUMNS}
+        renderItem={({ item }) => (
+          <View style={styles.tile}>
+            <SparkCard spark={item} />
+          </View>
+        )}
         contentContainerStyle={styles.list}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={Colors.flame} />
+          <RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={Colors.brass} />
         }
         ListHeaderComponent={
           <View style={styles.header}>
-            <AppText variant="title">Sparks</AppText>
-            <AppText tone="secondary">
-              People you crossed paths with and would click with. Wave to reveal each other.
-            </AppText>
+            <View style={styles.titleRow}>
+              <AppText variant="title">Sparks</AppText>
+              {!!sparks?.length && (
+                <AppText variant="heading" tone="brass">
+                  {sparks.length}
+                </AppText>
+              )}
+            </View>
+            <AppText tone="secondary">People you crossed paths with. Wave to reveal each other.</AppText>
+            <Divider />
             {error && <AppText tone="danger">{error}</AppText>}
           </View>
         }
         ListEmptyComponent={
           sparks ? (
             <View style={styles.empty}>
-              <AppText style={styles.emptyIcon}>🕯️</AppText>
+              <Diamond size={40} outline style={styles.emptyIcon} />
               <AppText variant="heading">No sparks yet</AppText>
               <AppText tone="secondary" style={styles.emptyText}>
                 Switch Spark on and go somewhere with people: a café, a gym, a hackathon.
@@ -76,21 +92,32 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   list: {
-    padding: Spacing.four,
-    gap: Spacing.two,
+    paddingVertical: Spacing.four,
+    paddingHorizontal: Spacing.four - GAP / 2,
+    gap: GAP,
+  },
+  tile: {
+    width: `${100 / COLUMNS}%`,
+    paddingHorizontal: GAP / 2,
   },
   header: {
     gap: Spacing.two,
-    marginBottom: Spacing.three,
+    marginBottom: Spacing.two,
+    paddingHorizontal: GAP / 2,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
   },
   empty: {
     alignItems: 'center',
+    paddingHorizontal: GAP / 2,
     gap: Spacing.two,
     paddingTop: Spacing.six,
   },
   emptyIcon: {
-    fontSize: 44,
-    lineHeight: 52,
+    marginBottom: Spacing.three,
   },
   emptyText: {
     textAlign: 'center',

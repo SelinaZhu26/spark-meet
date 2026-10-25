@@ -11,11 +11,13 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
+import { Diamond } from '@/components/ui/ornament';
 import { AppText } from '@/components/ui/text';
 import { Colors, Gradients } from '@/constants/theme';
 
-const ORB_SIZE = 220;
-const RIPPLE_DELAYS = [0, 800, 1600];
+const FRAME = 136;
+const CRYSTAL = 92;
+const RIPPLE_DELAYS = [0, 900, 1800];
 
 export type SparkOrbProps = {
   active: boolean;
@@ -23,24 +25,27 @@ export type SparkOrbProps = {
   onPress: () => void;
 };
 
-/** The big ON/OFF switch. Breathes and sends out ripples while active. */
+/** The big ON/OFF switch: a waypoint that lights up and floats while Spark is on. */
 export function SparkOrb({ active, busy, onPress }: SparkOrbProps) {
-  const breath = useSharedValue(0);
+  const hover = useSharedValue(0);
 
   useEffect(() => {
     if (active) {
-      breath.set(
-        withRepeat(withTiming(1, { duration: 1800, easing: Easing.inOut(Easing.sin) }), -1, true)
+      hover.set(
+        withRepeat(withTiming(1, { duration: 2000, easing: Easing.inOut(Easing.sin) }), -1, true)
       );
     } else {
-      cancelAnimation(breath);
-      breath.set(withTiming(0, { duration: 300 }));
+      cancelAnimation(hover);
+      hover.set(withTiming(0, { duration: 300 }));
     }
-  }, [active, breath]);
+  }, [active, hover]);
 
-  const orbStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: 1 + breath.get() * 0.04 }],
-    shadowOpacity: 0.35 + breath.get() * 0.4,
+  const floatStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: -10 - hover.get() * 10 }],
+  }));
+  const groundStyle = useAnimatedStyle(() => ({
+    transform: [{ scaleX: 1 - hover.get() * 0.18 }],
+    opacity: 0.5 - hover.get() * 0.2,
   }));
 
   return (
@@ -53,30 +58,33 @@ export function SparkOrb({ active, busy, onPress }: SparkOrbProps) {
         accessibilityState={{ checked: active, busy }}
         accessibilityLabel={active ? 'Spark is on. Tap to switch off.' : 'Spark is off. Tap to switch on.'}
         onPress={onPress}
-        disabled={busy}>
+        disabled={busy}
+        style={styles.hit}>
         {({ pressed }) => (
-          <Animated.View style={[styles.orb, active && styles.orbActive, orbStyle, pressed && styles.pressed]}>
-            <LinearGradient
-              colors={active ? Gradients.ember : Gradients.ash}
-              start={{ x: 0.15, y: 0.1 }}
-              end={{ x: 0.85, y: 0.95 }}
-              style={styles.fill}>
-              {busy ? (
-                <ActivityIndicator size="large" color={active ? Colors.background : Colors.flame} />
-              ) : (
-                <>
-                  <AppText style={[styles.bolt, !active && styles.boltOff]}>⚡</AppText>
-                  <AppText
-                    variant="label"
-                    style={{ color: active ? Colors.background : Colors.textSecondary }}>
-                    {active ? 'Spark is on' : 'Tap to light up'}
-                  </AppText>
-                </>
-              )}
-            </LinearGradient>
+          <Animated.View style={[styles.waypoint, floatStyle, pressed && styles.pressed]}>
+            <View style={[styles.frame, active && styles.frameActive]} />
+            <View style={styles.crystal}>
+              <LinearGradient
+                colors={active ? Gradients.waypoint : Gradients.dormant}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={StyleSheet.absoluteFill}
+              />
+            </View>
+            {busy ? (
+              <ActivityIndicator size="large" color={active ? Colors.ink : Colors.brass} />
+            ) : (
+              <AppText style={[styles.glyph, { color: active ? Colors.ink : Colors.textMuted }]}>✦</AppText>
+            )}
+            <Diamond
+              size={14}
+              color={active ? Colors.accent : Colors.border}
+              style={styles.pendant}
+            />
           </Animated.View>
         )}
       </Pressable>
+      <Animated.View style={[styles.ground, active && styles.groundActive, groundStyle]} />
     </View>
   );
 }
@@ -89,7 +97,7 @@ function Ripple({ delay, active }: { delay: number; active: boolean }) {
       progress.set(
         withDelay(
           delay,
-          withRepeat(withTiming(1, { duration: 2400, easing: Easing.out(Easing.quad) }), -1, false)
+          withRepeat(withTiming(1, { duration: 2700, easing: Easing.out(Easing.quad) }), -1, false)
         )
       );
     } else {
@@ -99,8 +107,8 @@ function Ripple({ delay, active }: { delay: number; active: boolean }) {
   }, [active, delay, progress]);
 
   const style = useAnimatedStyle(() => ({
-    opacity: active ? (1 - progress.get()) * 0.5 : 0,
-    transform: [{ scale: 1 + progress.get() * 0.8 }],
+    opacity: active ? (1 - progress.get()) * 0.6 : 0,
+    transform: [{ translateY: -20 }, { rotate: '45deg' }, { scale: 1 + progress.get() * 0.9 }],
   }));
 
   return <Animated.View pointerEvents="none" style={[styles.ripple, style]} />;
@@ -108,48 +116,68 @@ function Ripple({ delay, active }: { delay: number; active: boolean }) {
 
 const styles = StyleSheet.create({
   stage: {
-    width: ORB_SIZE * 1.9,
-    height: ORB_SIZE * 1.9,
+    width: 320,
+    height: 320,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  orb: {
-    width: ORB_SIZE,
-    height: ORB_SIZE,
-    borderRadius: ORB_SIZE / 2,
-    borderWidth: 1.5,
-    borderColor: Colors.border,
-    shadowColor: Colors.ember,
-    shadowOffset: { width: 0, height: 0 },
-    shadowRadius: 48,
-    elevation: 12,
+  hit: {
+    width: FRAME * 1.45,
+    height: FRAME * 1.45,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  orbActive: {
-    borderColor: Colors.glow,
+  waypoint: {
+    width: FRAME,
+    height: FRAME,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   pressed: {
-    opacity: 0.9,
+    opacity: 0.85,
   },
-  fill: {
-    flex: 1,
-    borderRadius: ORB_SIZE / 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
+  frame: {
+    position: 'absolute',
+    width: FRAME,
+    height: FRAME,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    transform: [{ rotate: '45deg' }],
   },
-  bolt: {
-    fontSize: 72,
-    lineHeight: 84,
+  frameActive: {
+    borderColor: Colors.brass,
   },
-  boltOff: {
-    opacity: 0.45,
+  crystal: {
+    position: 'absolute',
+    width: CRYSTAL,
+    height: CRYSTAL,
+    overflow: 'hidden',
+    transform: [{ rotate: '45deg' }],
+  },
+  glyph: {
+    fontSize: 40,
+    lineHeight: 48,
+  },
+  pendant: {
+    position: 'absolute',
+    bottom: -48,
+  },
+  ground: {
+    position: 'absolute',
+    bottom: 22,
+    width: 120,
+    height: 14,
+    borderRadius: 60,
+    backgroundColor: Colors.surfaceRaised,
+  },
+  groundActive: {
+    backgroundColor: `${Colors.accent}40`,
   },
   ripple: {
     position: 'absolute',
-    width: ORB_SIZE,
-    height: ORB_SIZE,
-    borderRadius: ORB_SIZE / 2,
-    borderWidth: 2,
-    borderColor: Colors.flame,
+    width: FRAME,
+    height: FRAME,
+    borderWidth: 1.5,
+    borderColor: Colors.accent,
   },
 });

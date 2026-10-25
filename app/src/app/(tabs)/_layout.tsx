@@ -6,7 +6,7 @@ export default function TabLayout() {
   return (
     <NativeTabs
       backgroundColor={Colors.background}
-      tintColor={Colors.flame}
+      tintColor={Colors.brass}
       indicatorColor={Colors.surfaceRaised}
       labelStyle={{ selected: { color: Colors.text } }}>
       <NativeTabs.Trigger name="index">

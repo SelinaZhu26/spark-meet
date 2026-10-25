@@ -58,7 +58,7 @@ export function IntegrationRow({ provider, integration, onChanged }: Integration
           integration && styles.actionConnected,
           (pressed || busy) && styles.pressed,
         ]}>
-        <AppText variant="caption" style={styles.actionText}>
+        <AppText variant="caption" style={[styles.actionText, !!integration && styles.actionTextConnected]}>
           {busy ? '…' : integration ? 'Unlink' : 'Link'}
         </AppText>
       </Pressable>
@@ -73,9 +73,9 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
   },
   dot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+    width: 10,
+    height: 10,
+    transform: [{ rotate: '45deg' }],
   },
   text: {
     flex: 1,
@@ -85,13 +85,18 @@ const styles = StyleSheet.create({
     borderRadius: Radius.pill,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
-    backgroundColor: Colors.ember,
+    backgroundColor: Colors.parchment,
   },
   actionConnected: {
     backgroundColor: Colors.surfaceRaised,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   actionText: {
     fontWeight: 800,
+    color: Colors.ink,
+  },
+  actionTextConnected: {
     color: Colors.text,
   },
   pressed: {

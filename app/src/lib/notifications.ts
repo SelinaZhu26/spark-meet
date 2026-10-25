@@ -50,7 +50,7 @@ export async function setupNotifications(): Promise<string | null> {
       name: 'Sparks',
       importance: Notifications.AndroidImportance.MAX,
       vibrationPattern: [0, 120, 80, 120, 80, 240],
-      lightColor: Colors.ember,
+      lightColor: Colors.accent,
     });
   }
   const { granted } = await Notifications.requestPermissionsAsync();
@@ -80,7 +80,7 @@ export function sparkTeaser(spark: Spark): string {
 export async function notifySpark(spark: Spark) {
   const data: NotificationData = { type: 'spark', spark_id: spark.id };
   await Notifications?.scheduleNotificationAsync({
-    content: { title: '⚡ Spark nearby', body: sparkTeaser(spark), data },
+    content: { title: '✦ Spark nearby', body: sparkTeaser(spark), data },
     trigger: null,
   });
 }

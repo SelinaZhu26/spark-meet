@@ -4,7 +4,7 @@ import { Colors, Fonts } from '@/constants/theme';
 
 export type AppTextProps = TextProps & {
   variant?: 'display' | 'title' | 'heading' | 'body' | 'caption' | 'label';
-  tone?: 'default' | 'secondary' | 'muted' | 'ember' | 'dating' | 'danger';
+  tone?: 'default' | 'secondary' | 'muted' | 'brass' | 'ink' | 'friends' | 'dating' | 'danger';
 };
 
 export function AppText({ style, variant = 'body', tone = 'default', ...rest }: AppTextProps) {
@@ -15,7 +15,9 @@ const tones = {
   default: Colors.text,
   secondary: Colors.textSecondary,
   muted: Colors.textMuted,
-  ember: Colors.flame,
+  brass: Colors.brass,
+  ink: Colors.ink,
+  friends: Colors.friends,
   dating: Colors.dating,
   danger: Colors.danger,
 } as const;
@@ -23,39 +25,40 @@ const tones = {
 const styles = StyleSheet.create({
   display: {
     fontFamily: Fonts.rounded,
-    fontSize: 44,
+    fontSize: 42,
     lineHeight: 48,
-    fontWeight: 800,
-    letterSpacing: -1,
+    fontWeight: 700,
+    letterSpacing: 1,
   },
   title: {
     fontFamily: Fonts.rounded,
-    fontSize: 30,
-    lineHeight: 36,
-    fontWeight: 800,
-    letterSpacing: -0.5,
+    fontSize: 26,
+    lineHeight: 32,
+    fontWeight: 700,
   },
   heading: {
     fontFamily: Fonts.rounded,
-    fontSize: 20,
-    lineHeight: 26,
+    fontSize: 18,
+    lineHeight: 24,
     fontWeight: 700,
   },
   body: {
-    fontSize: 16,
-    lineHeight: 23,
+    fontFamily: Fonts.rounded,
+    fontSize: 15,
+    lineHeight: 22,
     fontWeight: 500,
   },
   caption: {
+    fontFamily: Fonts.rounded,
     fontSize: 13,
     lineHeight: 18,
     fontWeight: 500,
   },
   label: {
-    fontSize: 12,
-    lineHeight: 16,
-    fontWeight: 800,
-    letterSpacing: 1.4,
-    textTransform: 'uppercase',
+    fontFamily: Fonts.rounded,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: 700,
+    letterSpacing: 0.4,
   },
 });

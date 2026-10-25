@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { SparkOrb } from '@/components/spark-orb';
 import { Chip } from '@/components/ui/chip';
+import { Divider } from '@/components/ui/ornament';
 import { AppText } from '@/components/ui/text';
 import { Colors, Spacing } from '@/constants/theme';
 import { errorMessage } from '@/lib/api';
@@ -39,21 +40,22 @@ export default function Home() {
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
       <View style={styles.header}>
-        <AppText variant="label" tone="ember">
-          spark
-        </AppText>
         <AppText variant="title">Hey {profile.display_name}</AppText>
+        <View style={styles.pools}>
+          {profile.friends_enabled && <Chip label="Friends" accent={Colors.friends} />}
+          {profile.dating_enabled && <Chip label="Dating" accent={Colors.dating} />}
+        </View>
       </View>
 
       <View style={styles.center}>
         <SparkOrb active={active} busy={busy} onPress={toggle} />
-        <AppText variant="heading" style={styles.status}>
-          {active ? 'Looking for your people nearby…' : 'Spark is off'}
+        <AppText variant="title" tone={active ? 'default' : 'secondary'} style={styles.status}>
+          {active ? 'Spark is on' : 'Spark is off'}
         </AppText>
         <AppText tone="secondary" style={styles.status}>
           {active
-            ? "Put your phone away. We'll buzz you when someone who shares your interests is within a few steps."
-            : 'Switch on and walk around. When someone you’d click with is close, both your phones buzz.'}
+            ? "Put your phone away. We'll buzz you when someone you'd click with is close."
+            : 'Tap the crystal to switch on.'}
         </AppText>
         {active && mode === 'foreground' && (
           <AppText variant="caption" tone="muted" style={styles.status}>
@@ -68,13 +70,9 @@ export default function Home() {
       </View>
 
       <View style={styles.footer}>
-        <View style={styles.pools}>
-          {profile.friends_enabled && <Chip label="🤝  Friends" selected />}
-          {profile.dating_enabled && <Chip label="💗  Dating" tone="dating" selected />}
-        </View>
+        <Divider style={styles.divider} />
         <AppText variant="caption" tone="muted" style={styles.status}>
-          Your location is never shown to anyone. A buzz means someone compatible is near — not
-          who, and not where.
+          Nobody sees your location. A buzz never says who or where.
         </AppText>
       </View>
     </SafeAreaView>
@@ -89,7 +87,11 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingTop: Spacing.three,
-    gap: Spacing.one,
+    gap: Spacing.three,
+  },
+  pools: {
+    flexDirection: 'row',
+    gap: Spacing.two,
   },
   center: {
     flex: 1,
@@ -99,15 +101,14 @@ const styles = StyleSheet.create({
   },
   status: {
     textAlign: 'center',
-    maxWidth: 340,
+    maxWidth: 320,
   },
   footer: {
     alignItems: 'center',
     gap: Spacing.three,
     paddingBottom: Spacing.five,
   },
-  pools: {
-    flexDirection: 'row',
-    gap: Spacing.two,
+  divider: {
+    alignSelf: 'stretch',
   },
 });

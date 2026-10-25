@@ -140,20 +140,22 @@ const styles = StyleSheet.create({
     maxWidth: '80%',
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two + 2,
-    borderRadius: Radius.medium + 4,
+    borderRadius: Radius.large,
   },
   mine: {
     alignSelf: 'flex-end',
-    backgroundColor: Colors.ember,
-    borderBottomRightRadius: 6,
+    backgroundColor: Colors.parchment,
+    borderBottomRightRadius: 4,
   },
   mineText: {
-    color: Colors.background,
+    color: Colors.ink,
   },
   theirs: {
     alignSelf: 'flex-start',
     backgroundColor: Colors.surfaceRaised,
-    borderBottomLeftRadius: 6,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderBottomLeftRadius: 4,
   },
   starter: {
     alignItems: 'center',
@@ -164,7 +166,7 @@ const styles = StyleSheet.create({
     padding: Spacing.three,
     borderRadius: Radius.medium,
     borderWidth: 1,
-    borderColor: Colors.ember,
+    borderColor: Colors.brass,
     borderStyle: 'dashed',
   },
   error: {
@@ -178,7 +180,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
     paddingTop: Spacing.two,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: Colors.border,
+    borderTopColor: `${Colors.brass}4D`,
   },
   input: {
     flex: 1,
@@ -198,7 +200,7 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.ember,
+    backgroundColor: Colors.parchment,
   },
   sendDisabled: {
     opacity: 0.5,
@@ -207,6 +209,6 @@ const styles = StyleSheet.create({
     fontSize: 22,
     lineHeight: 26,
     fontWeight: 800,
-    color: Colors.background,
+    color: Colors.ink,
   },
 });

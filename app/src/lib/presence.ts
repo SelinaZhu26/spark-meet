@@ -175,7 +175,7 @@ async function startBackgroundUpdates(prompt: boolean): Promise<PresenceMode> {
         foregroundService: {
           notificationTitle: 'Spark is on',
           notificationBody: "We'll buzz you when someone you'd click with is near.",
-          notificationColor: Colors.ember,
+          notificationColor: Colors.accent,
         },
       });
     }

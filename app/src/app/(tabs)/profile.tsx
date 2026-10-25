@@ -1,3 +1,4 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -7,7 +8,7 @@ import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { AppText } from '@/components/ui/text';
-import { Colors, Spacing } from '@/constants/theme';
+import { Colors, Gradients, Radius, Spacing } from '@/constants/theme';
 import { useMe, useSession } from '@/lib/session';
 
 export default function Profile() {
@@ -17,13 +18,17 @@ export default function Profile() {
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <View style={styles.header}>
-          <Avatar name={profile.display_name} url={profile.avatar_url} size={72} />
+        <LinearGradient
+          colors={Gradients.rarity4}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.namecard}>
+          <Avatar name={profile.display_name} url={profile.avatar_url} size={76} />
           <View style={styles.headerText}>
             <AppText variant="title">{profile.display_name}</AppText>
-            <AppText tone="secondary">This is what Spark matches on.</AppText>
+            <AppText style={styles.subtitle}>This is what Spark matches on.</AppText>
           </View>
-        </View>
+        </LinearGradient>
 
         {available_integrations.length > 0 && (
           <Card>
@@ -67,14 +72,20 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.six,
     gap: Spacing.five,
   },
-  header: {
+  namecard: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.three,
+    padding: Spacing.three,
+    borderRadius: Radius.small,
+    borderTopRightRadius: 28,
   },
   headerText: {
     flex: 1,
     gap: Spacing.one,
+  },
+  subtitle: {
+    color: `${Colors.parchment}CC`,
   },
   cardHeader: {
     gap: Spacing.one,

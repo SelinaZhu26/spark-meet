@@ -3,6 +3,7 @@ import { StyleSheet, TextInput, View } from 'react-native';
 
 import { Button } from '@/components/ui/button';
 import { Chip } from '@/components/ui/chip';
+import { Diamond } from '@/components/ui/ornament';
 import { AppText } from '@/components/ui/text';
 import { Colors, Radius, Spacing } from '@/constants/theme';
 import { api, errorMessage } from '@/lib/api';
@@ -124,7 +125,10 @@ export function ProfileForm({ initial, submitLabel, onSaved }: ProfileFormProps)
         />
       </Field>
 
-      <Field label={`Interests · ${interests.length}/${MAX_INTERESTS}`} hint="The more specific, the better the sparks.">
+      <Field
+        label="Interests"
+        aside={`${interests.length}/${MAX_INTERESTS}`}
+        hint="The more specific, the better the sparks.">
         <View style={styles.chips}>
           {[...SUGGESTED_INTERESTS, ...customInterests].map((interest) => (
             <Chip
@@ -150,8 +154,18 @@ export function ProfileForm({ initial, submitLabel, onSaved }: ProfileFormProps)
 
       <Field label="Looking for" hint="Separate pools. Dating sparks only happen between two people who both opted in.">
         <View style={styles.chips}>
-          <Chip label="🤝  Friends" selected={friends} onPress={() => setFriends(!friends)} />
-          <Chip label="💗  Dating" tone="dating" selected={dating} onPress={() => setDating(!dating)} />
+          <Chip
+            label="Friends"
+            accent={Colors.friends}
+            selected={friends}
+            onPress={() => setFriends(!friends)}
+          />
+          <Chip
+            label="Dating"
+            accent={Colors.dating}
+            selected={dating}
+            onPress={() => setDating(!dating)}
+          />
         </View>
       </Field>
 
@@ -159,6 +173,7 @@ export function ProfileForm({ initial, submitLabel, onSaved }: ProfileFormProps)
 
       <Button
         title={submitLabel}
+        icon="confirm"
         onPress={save}
         loading={saving}
         disabled={!displayName.trim() || (!friends && !dating)}
@@ -167,12 +182,22 @@ export function ProfileForm({ initial, submitLabel, onSaved }: ProfileFormProps)
   );
 }
 
-function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
+type FieldProps = { label: string; aside?: string; hint?: string; children: React.ReactNode };
+
+function Field({ label, aside, hint, children }: FieldProps) {
   return (
     <View style={styles.field}>
-      <AppText variant="label" tone="secondary">
-        {label}
-      </AppText>
+      <View style={styles.fieldHeader}>
+        <Diamond size={7} />
+        <AppText variant="label" tone="brass" style={styles.fieldLabel}>
+          {label}
+        </AppText>
+        {aside && (
+          <AppText variant="caption" tone="muted">
+            {aside}
+          </AppText>
+        )}
+      </View>
       {hint && (
         <AppText variant="caption" tone="muted">
           {hint}
@@ -189,6 +214,14 @@ const styles = StyleSheet.create({
   },
   field: {
     gap: Spacing.two,
+  },
+  fieldHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+  },
+  fieldLabel: {
+    flex: 1,
   },
   input: {
     backgroundColor: Colors.surface,

@@ -16,7 +16,7 @@ const theme = {
   ...DarkTheme,
   colors: {
     ...DarkTheme.colors,
-    primary: Colors.ember,
+    primary: Colors.brass,
     background: Colors.background,
     card: Colors.background,
     text: Colors.text,
@@ -53,7 +53,7 @@ function RootNavigator() {
         title="Can't reach Spark"
         message={error}
         actions={[
-          { title: 'Try again', onPress: refreshMe },
+          { title: 'Try again', onPress: refreshMe, icon: 'confirm' },
           { title: 'Sign out', onPress: signOut, variant: 'ghost' },
         ]}
       />
