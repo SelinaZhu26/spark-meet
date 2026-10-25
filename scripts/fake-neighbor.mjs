@@ -4,7 +4,7 @@
 //   node scripts/fake-neighbor.mjs [latitude longitude] [--interests "Bouldering,Jazz"]
 //
 // Signs in (or signs up) a bot account, gives it a profile, switches Spark on
-// and pings every 20 s. Without coordinates it stands wherever your phone
+// and pings every 5 s. Without coordinates it stands wherever your phone
 // last pinged, read straight from the pings database (dev only: the API
 // never returns locations). It waves at every spark it gets and replies to
 // chat messages. Ctrl+C switches it off again.
@@ -26,7 +26,7 @@ const SUPABASE_KEY = env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 const API_URL = (env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8080').replace(/\/$/, '');
 const EMAIL = env.BOT_EMAIL ?? 'neighbor@spark-bot.dev';
 const PASSWORD = env.BOT_PASSWORD ?? 'spark-neighbor-bot';
-const PING_MS = 20_000;
+const PING_MS = 5_000;
 
 const args = process.argv.slice(2);
 const fixed = Number.isFinite(Number(args[0])) && Number.isFinite(Number(args[1]))

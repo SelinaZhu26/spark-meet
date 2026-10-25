@@ -16,7 +16,7 @@ use crate::{
 /// Fixes less accurate than this are too vague to say who's "right here".
 const MAX_ACCURACY_M: f32 = 100.0;
 /// Pings closer together than this are not matched again.
-const MIN_PING_INTERVAL_SECS: f64 = 10.0;
+const MIN_PING_INTERVAL_SECS: f64 = 3.0;
 /// Faster apparent movement than this (~250 km/h) means a spoofed location.
 /// Together with the interval this makes sweeping fake locations to find
 /// someone impractical.
@@ -129,7 +129,7 @@ mod tests {
     fn rejects_rapid_or_teleporting_pings() {
         assert!(is_plausible(30.0, 40.0));
         assert!(is_plausible(600.0, 30_000.0));
-        assert!(!is_plausible(3.0, 0.0));
+        assert!(!is_plausible(1.0, 0.0));
         assert!(!is_plausible(30.0, 5_000.0));
     }
 }
