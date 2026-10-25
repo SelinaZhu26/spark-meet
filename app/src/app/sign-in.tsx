@@ -1,16 +1,13 @@
-import { LinearGradient } from 'expo-linear-gradient';
-import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, StyleSheet, TextInput, View } from 'react-native';
-import Animated from 'react-native-reanimated';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Logo } from '@/components/logo';
+import { Sparkler } from '@/components/sparkler';
 import { Button } from '@/components/ui/button';
 import { rise } from '@/components/ui/rise';
 import { AppText } from '@/components/ui/text';
-import { WelcomeShapes } from '@/components/welcome-shapes';
-import { Colors, Fonts, Radius, Spacing, Welcome } from '@/constants/theme';
+import { Colors, Fonts, Spacing } from '@/constants/theme';
 import { errorMessage } from '@/lib/api';
 import { supabase } from '@/lib/supabase';
 
@@ -40,97 +37,105 @@ export default function SignIn() {
   const ready = email.includes('@') && password.length >= 6;
 
   return (
-    <LinearGradient colors={Welcome.gradient} style={styles.screen}>
-      <StatusBar style="dark" />
-      <WelcomeShapes />
-      <SafeAreaView style={styles.screen}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={styles.content}>
-          <Logo dark />
-          <View style={styles.bottom}>
-            <Animated.View entering={rise(0)}>
-              <AppText variant="hero" tone="ink">
-                your people are already nearby.
-              </AppText>
-            </Animated.View>
-            <Animated.View entering={rise(1)} style={styles.form}>
-              <TextInput
-                value={email}
-                onChangeText={setEmail}
-                placeholder="email"
-                placeholderTextColor={PLACEHOLDER}
-                autoCapitalize="none"
-                autoCorrect={false}
-                autoComplete="email"
-                keyboardType="email-address"
-                style={styles.input}
-              />
-              <TextInput
-                value={password}
-                onChangeText={setPassword}
-                placeholder="password"
-                placeholderTextColor={PLACEHOLDER}
-                secureTextEntry
-                autoComplete="password"
-                style={styles.input}
-              />
+    <SafeAreaView style={styles.screen}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={styles.content}>
+        <Animated.View entering={FadeIn.duration(1200)} style={styles.hero}>
+          <Sparkler size={300} lit={1} />
+        </Animated.View>
+        <View style={styles.bottom}>
+          <Animated.View entering={rise(0)}>
+            <AppText style={styles.wordmark}>spark</AppText>
+            <AppText variant="hero">your people are already nearby.</AppText>
+          </Animated.View>
+          <Animated.View entering={rise(1)} style={styles.form}>
+            <TextInput
+              value={email}
+              onChangeText={setEmail}
+              placeholder="email"
+              placeholderTextColor={Colors.textMuted}
+              autoCapitalize="none"
+              autoCorrect={false}
+              autoComplete="email"
+              keyboardType="email-address"
+              style={styles.input}
+            />
+            <TextInput
+              value={password}
+              onChangeText={setPassword}
+              placeholder="password"
+              placeholderTextColor={Colors.textMuted}
+              secureTextEntry
+              autoComplete="password"
+              style={styles.input}
+            />
+            <View style={styles.buttons}>
               <Button
                 title="sign in"
-                variant="dark"
                 onPress={() => submit('sign-in')}
                 loading={busy === 'sign-in'}
                 disabled={!ready || busy !== null}
               />
               <Button
                 title="create account"
-                variant="light"
+                variant="ghost"
                 onPress={() => submit('sign-up')}
                 loading={busy === 'sign-up'}
                 disabled={!ready || busy !== null}
               />
-              {error && (
-                <AppText tone="danger" style={styles.center}>
-                  {error}
-                </AppText>
-              )}
-            </Animated.View>
-          </View>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
-    </LinearGradient>
+            </View>
+            {error && (
+              <AppText tone="danger" style={styles.center}>
+                {error}
+              </AppText>
+            )}
+          </Animated.View>
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
-
-const PLACEHOLDER = 'rgba(34, 24, 42, 0.45)';
 
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
+    backgroundColor: Colors.background,
   },
   content: {
     flex: 1,
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.four - 2,
-    paddingTop: Spacing.three,
+    paddingHorizontal: Spacing.four,
     paddingBottom: Spacing.three,
+  },
+  hero: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   bottom: {
     gap: Spacing.four,
   },
+  wordmark: {
+    fontFamily: Fonts.semiBoldItalic,
+    fontSize: 22,
+    lineHeight: 28,
+    color: Colors.gold,
+    marginBottom: Spacing.one,
+  },
   form: {
-    gap: Spacing.three - 4,
+    gap: Spacing.two,
   },
   input: {
-    height: 56,
-    backgroundColor: Welcome.fill,
-    borderRadius: Radius.medium - 2,
-    borderWidth: 1,
-    borderColor: Welcome.border,
-    color: Colors.ink,
-    fontFamily: Fonts.medium,
+    height: 54,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.lineStrong,
+    color: Colors.text,
+    fontFamily: Fonts.regular,
     fontSize: 20,
-    paddingHorizontal: Spacing.three + 2,
+  },
+  buttons: {
+    gap: Spacing.three - 4,
+    marginTop: Spacing.four - 4,
   },
   center: {
     textAlign: 'center',

@@ -125,13 +125,8 @@ export function ProfileForm({ initial, submitLabel, onSaved }: ProfileFormProps)
       <Card>
         <Field label="looking for">
           <View style={styles.chips}>
-            <Chip label="🤝 friends" selected={friends} onPress={() => setFriends(!friends)} />
-            <Chip
-              label="💗 dating"
-              tone="dating"
-              selected={dating}
-              onPress={() => setDating(!dating)}
-            />
+            <Chip label="friends" selected={friends} onPress={() => setFriends(!friends)} />
+            <Chip label="dating" selected={dating} onPress={() => setDating(!dating)} />
           </View>
         </Field>
       </Card>
@@ -160,7 +155,7 @@ function Field({
   return (
     <View style={styles.field}>
       <View style={styles.fieldHeader}>
-        <AppText variant="label" tone="secondary">
+        <AppText variant="label" tone="muted">
           {label}
         </AppText>
         {aside && (
@@ -187,19 +182,21 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   input: {
-    minHeight: 50,
-    backgroundColor: Colors.surfaceRaised,
-    borderRadius: Radius.small,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: Colors.line,
+    minHeight: 46,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.lineStrong,
     color: Colors.text,
-    fontFamily: Fonts.medium,
-    fontSize: 18,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.three - 3,
+    fontFamily: Fonts.regular,
+    fontSize: 19,
+    paddingVertical: Spacing.two + 2,
   },
   multiline: {
     minHeight: 104,
+    borderWidth: 1,
+    borderColor: Colors.line,
+    borderRadius: Radius.small,
+    paddingHorizontal: Spacing.three - 2,
+    paddingTop: Spacing.three - 4,
     textAlignVertical: 'top',
   },
   chips: {

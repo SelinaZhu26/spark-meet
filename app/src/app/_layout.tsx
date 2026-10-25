@@ -1,12 +1,15 @@
 import '@/lib/presence';
 
 import {
+  CrimsonPro_200ExtraLight_Italic,
+  CrimsonPro_300Light,
+  CrimsonPro_300Light_Italic,
   CrimsonPro_400Regular,
+  CrimsonPro_400Regular_Italic,
   CrimsonPro_500Medium,
   CrimsonPro_500Medium_Italic,
   CrimsonPro_600SemiBold,
   CrimsonPro_600SemiBold_Italic,
-  CrimsonPro_700Bold,
 } from '@expo-google-fonts/crimson-pro';
 import { useFonts } from 'expo-font';
 import { DarkTheme, Stack, ThemeProvider } from 'expo-router';
@@ -26,7 +29,7 @@ const theme = {
   ...DarkTheme,
   colors: {
     ...DarkTheme.colors,
-    primary: Colors.yellow,
+    primary: Colors.gold,
     background: Colors.background,
     card: Colors.background,
     text: Colors.text,
@@ -36,12 +39,15 @@ const theme = {
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
+    CrimsonPro_200ExtraLight_Italic,
+    CrimsonPro_300Light,
+    CrimsonPro_300Light_Italic,
     CrimsonPro_400Regular,
+    CrimsonPro_400Regular_Italic,
     CrimsonPro_500Medium,
     CrimsonPro_500Medium_Italic,
     CrimsonPro_600SemiBold,
     CrimsonPro_600SemiBold_Italic,
-    CrimsonPro_700Bold,
     [iconFont.name]: iconFont.font,
   });
 
@@ -88,7 +94,7 @@ function RootNavigator({ fontsReady }: { fontsReady: boolean }) {
         screenOptions={{
           headerStyle: { backgroundColor: Colors.background },
           headerTintColor: Colors.text,
-          headerTitleStyle: { fontFamily: Fonts.semiBold, fontSize: 20 },
+          headerTitleStyle: { fontFamily: Fonts.semiBoldItalic, fontSize: 22 },
           headerShadowVisible: false,
           headerBackButtonDisplayMode: 'minimal',
           contentStyle: { backgroundColor: Colors.background },

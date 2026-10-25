@@ -1,11 +1,11 @@
 import * as Haptics from 'expo-haptics';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { ZoomIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { SparkBlock, blockPalette } from '@/components/spark-block';
+import { Sparkler } from '@/components/sparkler';
 import { StatusScreen } from '@/components/status-screen';
 import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,7 @@ import { Icon } from '@/components/ui/icon';
 import { IconButton } from '@/components/ui/icon-button';
 import { rise } from '@/components/ui/rise';
 import { AppText } from '@/components/ui/text';
-import { Colors, Fonts, Radius, Spacing, Springs, Tones } from '@/constants/theme';
+import { Colors, Fonts, Radius, Spacing, Springs } from '@/constants/theme';
 import { api, errorMessage } from '@/lib/api';
 import type { Spark } from '@/lib/types';
 
@@ -97,39 +97,32 @@ export default function SparkDetail() {
 
 function Details({ spark, waving, onWave }: { spark: Spark; waving: boolean; onWave: () => void }) {
   const router = useRouter();
-  const { width } = useWindowDimensions();
-  const blockWidth = Math.min(width - Spacing.three * 2, 480);
-  const dating = spark.mode === 'dating';
 
   return (
     <>
-      <Animated.View entering={rise(0)}>
-        <SparkBlock
-          palette={blockPalette(spark.id, spark.mode)}
-          seed={spark.id}
-          width={blockWidth}
-          height={blockWidth * 1.05}
-          live>
-          <View style={styles.badge}>
-            <AppText style={styles.badgeText}>
-              {dating ? 'dating' : 'friends'} · {spark.score}% match
-            </AppText>
-          </View>
-          <AppText variant="title" tone="ink">
-            {spark.reason}
-          </AppText>
-        </SparkBlock>
+      <Animated.View entering={rise(0)} style={styles.hero}>
+        <Sparkler size={210} lit={1} style={styles.sparkler} />
+        <View style={styles.score}>
+          <AppText style={styles.scoreNumber}>{spark.score}</AppText>
+          <AppText style={styles.scoreUnit}>%</AppText>
+        </View>
+        <AppText variant="label" tone="secondary">
+          {spark.mode} match
+        </AppText>
       </Animated.View>
 
-      <Animated.View entering={rise(1)} style={styles.chips}>
-        {spark.shared_interests.map((interest) => (
-          <Chip key={interest} label={interest} />
-        ))}
+      <Animated.View entering={rise(1)} style={styles.reason}>
+        <AppText variant="title">{spark.reason}</AppText>
+        <View style={styles.chips}>
+          {spark.shared_interests.map((interest) => (
+            <Chip key={interest} label={interest} selected />
+          ))}
+        </View>
       </Animated.View>
 
       <Animated.View entering={rise(2)}>
         <Card>
-          <AppText variant="label" tone="secondary">
+          <AppText variant="label" tone="muted">
             icebreaker
           </AppText>
           <AppText style={styles.icebreaker}>{spark.icebreaker}</AppText>
@@ -141,25 +134,18 @@ function Details({ spark, waving, onWave }: { spark: Spark; waving: boolean; onW
           <Button
             title="say hi"
             icon="chat"
-            variant={dating ? 'dating' : 'primary'}
             onPress={() => router.push({ pathname: '/chat/[id]', params: { id: spark.id } })}
           />
         ) : spark.waved ? (
           <Animated.View
             entering={ZoomIn.springify(Springs.pop.duration).dampingRatio(Springs.pop.dampingRatio)}
             style={styles.waved}>
-            <Icon name="check" size={20} color={dating ? Tones.dating : Tones.accent} />
+            <Icon name="check" size={18} color={Colors.gold} />
             <AppText style={styles.wavedText}>waved · waiting for them</AppText>
           </Animated.View>
         ) : (
           <>
-            <Button
-              title="wave"
-              icon="wave"
-              variant={dating ? 'dating' : 'primary'}
-              loading={waving}
-              onPress={onWave}
-            />
+            <Button title="wave" icon="wave" loading={waving} onPress={onWave} />
             <AppText variant="caption" tone="muted" style={styles.center}>
               nothing&apos;s shared unless you both wave
             </AppText>
@@ -172,15 +158,24 @@ function Details({ spark, waving, onWave }: { spark: Spark; waving: boolean; onW
           <Card>
             <View style={styles.peer}>
               <Avatar name={spark.other.display_name} url={spark.other.avatar_url} size={56} />
-              <AppText variant="heading" numberOfLines={1} style={styles.peerName}>
-                {spark.other.display_name}
-              </AppText>
+              <View style={styles.peerText}>
+                <AppText variant="heading" numberOfLines={1}>
+                  {spark.other.display_name}
+                </AppText>
+                <AppText variant="label" tone="accent">
+                  you both waved
+                </AppText>
+              </View>
             </View>
             {!!spark.other.bio && <AppText tone="secondary">{spark.other.bio}</AppText>}
             {spark.other.interests.length > 0 && (
               <View style={styles.chips}>
                 {spark.other.interests.map((interest) => (
-                  <Chip key={interest} label={interest} />
+                  <Chip
+                    key={interest}
+                    label={interest}
+                    selected={spark.shared_interests.includes(interest)}
+                  />
                 ))}
               </View>
             )}
@@ -197,27 +192,42 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   content: {
-    paddingHorizontal: Spacing.three,
-    gap: Spacing.three,
+    paddingHorizontal: Spacing.four - 4,
+    gap: Spacing.four - 4,
     alignItems: 'stretch',
   },
   back: {
     position: 'absolute',
     left: Spacing.three,
   },
-  badge: {
-    alignSelf: 'flex-start',
-    backgroundColor: Colors.ink,
-    borderRadius: Radius.pill,
-    paddingHorizontal: Spacing.three - 4,
-    paddingVertical: Spacing.one + 1,
-    marginBottom: Spacing.three - 4,
+  hero: {
+    height: 210,
+    justifyContent: 'flex-end',
+    marginTop: -Spacing.five,
   },
-  badgeText: {
-    fontFamily: Fonts.semiBold,
-    fontSize: 15,
-    lineHeight: 19,
-    color: Colors.text,
+  sparkler: {
+    position: 'absolute',
+    top: 0,
+    right: -Spacing.two,
+  },
+  score: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  scoreNumber: {
+    fontFamily: Fonts.thinItalic,
+    fontSize: 112,
+    lineHeight: 112,
+    letterSpacing: -4,
+  },
+  scoreUnit: {
+    fontFamily: Fonts.lightItalic,
+    fontSize: 40,
+    lineHeight: 56,
+    color: Colors.gold,
+  },
+  reason: {
+    gap: Spacing.three,
   },
   chips: {
     flexDirection: 'row',
@@ -225,23 +235,22 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
   },
   icebreaker: {
-    fontFamily: Fonts.semiBoldItalic,
-    fontSize: 25,
+    fontFamily: Fonts.italic,
+    fontSize: 24,
     lineHeight: 30,
   },
   action: {
-    gap: Spacing.two,
+    gap: Spacing.two + 2,
   },
   waved: {
-    height: 52,
+    height: 54,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.two,
     borderRadius: Radius.pill,
-    backgroundColor: Colors.surface,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: Colors.line,
+    borderWidth: 1,
+    borderColor: Colors.lineStrong,
   },
   wavedText: {
     fontFamily: Fonts.semiBoldItalic,
@@ -254,9 +263,10 @@ const styles = StyleSheet.create({
   peer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.three - 4,
+    gap: Spacing.three - 2,
   },
-  peerName: {
+  peerText: {
     flex: 1,
+    gap: Spacing.half,
   },
 });

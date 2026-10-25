@@ -1,5 +1,3 @@
-import { LinearGradient } from 'expo-linear-gradient';
-import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState, type Dispatch, type SetStateAction } from 'react';
 import {
   KeyboardAvoidingView,
@@ -20,14 +18,14 @@ import Animated, {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Logo } from '@/components/logo';
+import { Sparkler } from '@/components/sparkler';
 import { Button } from '@/components/ui/button';
 import { Chip } from '@/components/ui/chip';
-import { Icon } from '@/components/ui/icon';
+import { Icon, type IconName } from '@/components/ui/icon';
 import { IconButton } from '@/components/ui/icon-button';
 import { PressableScale } from '@/components/ui/pressable-scale';
 import { AppText } from '@/components/ui/text';
-import { WelcomeShapes } from '@/components/welcome-shapes';
-import { Colors, Fonts, Radius, Spacing, Springs, Welcome } from '@/constants/theme';
+import { Colors, Fonts, Radius, Spacing, Springs, alpha } from '@/constants/theme';
 import { api, errorMessage } from '@/lib/api';
 import {
   SUGGESTED_INTERESTS,
@@ -40,7 +38,6 @@ import { useMe, useSession } from '@/lib/session';
 
 const STEPS = 4;
 const MIN_INTERESTS = 3;
-const PLACEHOLDER = 'rgba(34, 24, 42, 0.45)';
 
 export default function Onboarding() {
   const { setMe } = useSession();
@@ -90,73 +87,68 @@ export default function Onboarding() {
   };
 
   return (
-    <LinearGradient colors={Welcome.gradient} style={styles.screen}>
-      <StatusBar style="dark" />
-      <WelcomeShapes />
-      <SafeAreaView style={styles.screen}>
-        <View style={styles.top}>
-          {step > 0 && (
-            <IconButton
-              icon="back"
-              onPress={() => go(step - 1)}
-              accessibilityLabel="Back"
-              size={38}
-              color={Welcome.fill}
-              iconColor={Colors.ink}
+    <SafeAreaView style={styles.screen}>
+      {/* The sparkler lights a little more with every step. */}
+      <Sparkler size={200} lit={(step + 1) / STEPS} style={styles.sparkler} />
+      <View style={styles.top}>
+        {step > 0 && (
+          <IconButton
+            icon="back"
+            onPress={() => go(step - 1)}
+            accessibilityLabel="Back"
+            size={38}
+          />
+        )}
+        <View style={styles.logo}>
+          <Logo size={22} />
+        </View>
+        <Progress step={step} />
+      </View>
+
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={styles.fill}>
+        <Animated.View
+          key={step}
+          entering={(forward ? SlideInRight : SlideInLeft)
+            .springify(Springs.slide.duration)
+            .dampingRatio(Springs.slide.dampingRatio)}
+          exiting={FadeOut.duration(120)}
+          style={styles.step}>
+          {step === 0 && (
+            <NameStep
+              value={displayName}
+              onChange={setDisplayName}
+              onSubmit={() => ready && go(1)}
             />
           )}
-          <View style={styles.logo}>
-            <Logo dark size={22} />
-          </View>
-          <Progress step={step} />
-        </View>
-
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={styles.screen}>
-          <Animated.View
-            key={step}
-            entering={(forward ? SlideInRight : SlideInLeft)
-              .springify(Springs.slide.duration)
-              .dampingRatio(Springs.slide.dampingRatio)}
-            exiting={FadeOut.duration(120)}
-            style={styles.step}>
-            {step === 0 && (
-              <NameStep
-                value={displayName}
-                onChange={setDisplayName}
-                onSubmit={() => ready && go(1)}
-              />
-            )}
-            {step === 1 && <InterestsStep interests={interests} onChange={setInterests} />}
-            {step === 2 && (
-              <PoolsStep
-                friends={friends}
-                dating={dating}
-                onFriends={setFriends}
-                onDating={setDating}
-              />
-            )}
-            {step === 3 && <BioStep value={bio} onChange={setBio} />}
-          </Animated.View>
-
-          <View style={styles.footer}>
-            {error && (
-              <AppText tone="danger" style={styles.center}>
-                {error}
-              </AppText>
-            )}
-            <Button
-              title={last ? "let's go" : 'continue'}
-              variant="dark"
-              onPress={last ? finish : () => go(step + 1)}
-              disabled={!ready}
-              loading={saving}
+          {step === 1 && <InterestsStep interests={interests} onChange={setInterests} />}
+          {step === 2 && (
+            <PoolsStep
+              friends={friends}
+              dating={dating}
+              onFriends={setFriends}
+              onDating={setDating}
             />
-          </View>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
-    </LinearGradient>
+          )}
+          {step === 3 && <BioStep value={bio} onChange={setBio} />}
+        </Animated.View>
+
+        <View style={styles.footer}>
+          {error && (
+            <AppText tone="danger" style={styles.center}>
+              {error}
+            </AppText>
+          )}
+          <Button
+            title={last ? "let's go" : 'continue'}
+            onPress={last ? finish : () => go(step + 1)}
+            disabled={!ready}
+            loading={saving}
+          />
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
@@ -178,7 +170,7 @@ function ProgressDot({ on }: { on: boolean }) {
   const style = useAnimatedStyle(() => ({ width: width.get() }));
   return (
     <Animated.View
-      style={[styles.dot, { backgroundColor: on ? Colors.ink : Welcome.border }, style]}
+      style={[styles.dot, { backgroundColor: on ? Colors.gold : Colors.lineStrong }, style]}
     />
   );
 }
@@ -194,14 +186,12 @@ function NameStep({
 }) {
   return (
     <View style={styles.bottomStep}>
-      <AppText variant="hero" tone="ink">
-        what should we call you?
-      </AppText>
+      <AppText variant="hero">what should we call you?</AppText>
       <TextInput
         value={value}
         onChangeText={onChange}
         placeholder="your first name"
-        placeholderTextColor={PLACEHOLDER}
+        placeholderTextColor={Colors.textMuted}
         maxLength={40}
         autoFocus
         autoComplete="given-name"
@@ -224,10 +214,8 @@ function InterestsStep({
   const [custom, setCustom] = useState('');
   const has = (interest: string) => interests.some((existing) => sameInterest(existing, interest));
   const options = [
-    ...SUGGESTED_INTERESTS.map(({ name, emoji }) => ({ name, label: `${emoji} ${name}` })),
-    ...interests
-      .filter((interest) => !isSuggested(interest))
-      .map((name) => ({ name, label: `✨ ${name}` })),
+    ...SUGGESTED_INTERESTS.map(({ name }) => name),
+    ...interests.filter((interest) => !isSuggested(interest)),
   ];
 
   const add = () => {
@@ -243,18 +231,15 @@ function InterestsStep({
       contentContainerStyle={styles.scrollStep}
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}>
-      <AppText variant="title" tone="ink">
-        what are you into?
-      </AppText>
-      <AppText tone="ink" style={styles.lead}>
+      <AppText variant="hero">what are you into?</AppText>
+      <AppText variant="label" tone="secondary" style={styles.lead}>
         pick {MIN_INTERESTS} or more
       </AppText>
       <View style={styles.chips}>
-        {options.map(({ name, label }) => (
+        {options.map((name) => (
           <Chip
             key={name}
-            label={label}
-            light
+            label={name}
             selected={has(name)}
             onPress={() => onChange((current) => toggleInterest(current, name))}
           />
@@ -265,7 +250,7 @@ function InterestsStep({
         onChangeText={setCustom}
         onSubmitEditing={add}
         placeholder="add your own"
-        placeholderTextColor={PLACEHOLDER}
+        placeholderTextColor={Colors.textMuted}
         maxLength={40}
         returnKeyType="done"
         submitBehavior="submit"
@@ -285,24 +270,27 @@ type PoolsStepProps = {
 function PoolsStep({ friends, dating, onFriends, onDating }: PoolsStepProps) {
   return (
     <View style={styles.bottomStep}>
-      <AppText variant="hero" tone="ink">
-        who are you looking for?
-      </AppText>
+      <AppText variant="hero">who are you looking for?</AppText>
       <View style={styles.options}>
-        <Option emoji="🤝" label="friends" selected={friends} onPress={() => onFriends(!friends)} />
-        <Option emoji="💗" label="dating" selected={dating} onPress={() => onDating(!dating)} />
+        <Option
+          icon="friends"
+          label="friends"
+          selected={friends}
+          onPress={() => onFriends(!friends)}
+        />
+        <Option icon="dating" label="dating" selected={dating} onPress={() => onDating(!dating)} />
       </View>
     </View>
   );
 }
 
 function Option({
-  emoji,
+  icon,
   label,
   selected,
   onPress,
 }: {
-  emoji: string;
+  icon: IconName;
   label: string;
   selected: boolean;
   onPress: () => void;
@@ -313,15 +301,14 @@ function Option({
       accessibilityState={{ checked: selected }}
       onPress={onPress}
       pressedScale={0.98}
-      style={[styles.option, selected ? styles.optionOn : styles.optionOff]}>
-      <View
-        style={[
-          styles.optionEmoji,
-          { backgroundColor: selected ? Colors.surfaceRaised : Welcome.fill },
-        ]}>
-        <AppText style={styles.emoji}>{emoji}</AppText>
-      </View>
-      <AppText style={[styles.optionLabel, { color: selected ? Colors.text : Colors.ink }]}>
+      style={[
+        styles.option,
+        selected ? styles.optionOn : styles.optionOff,
+        { transitionProperty: ['borderColor', 'backgroundColor'], transitionDuration: 220 },
+      ]}>
+      <Icon name={icon} size={22} color={selected ? Colors.gold : Colors.textMuted} />
+      <AppText
+        style={[styles.optionLabel, { color: selected ? Colors.text : Colors.textSecondary }]}>
         {label}
       </AppText>
       <View style={[styles.check, selected ? styles.checkOn : styles.checkOff]}>
@@ -334,14 +321,12 @@ function Option({
 function BioStep({ value, onChange }: { value: string; onChange: (value: string) => void }) {
   return (
     <View style={styles.bottomStep}>
-      <AppText variant="hero" tone="ink">
-        anything else?
-      </AppText>
+      <AppText variant="hero">anything else?</AppText>
       <TextInput
         value={value}
         onChangeText={onChange}
         placeholder="learning to climb, obsessed with film photography, always down for ramen"
-        placeholderTextColor={PLACEHOLDER}
+        placeholderTextColor={Colors.textMuted}
         maxLength={300}
         multiline
         style={[styles.input, styles.multiline]}
@@ -353,12 +338,21 @@ function BioStep({ value, onChange }: { value: string; onChange: (value: string)
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
+    backgroundColor: Colors.background,
+  },
+  fill: {
+    flex: 1,
+  },
+  sparkler: {
+    position: 'absolute',
+    top: 64,
+    right: Spacing.three,
   },
   top: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.three - 4,
-    paddingHorizontal: Spacing.four - 2,
+    paddingHorizontal: Spacing.four - 4,
     paddingTop: Spacing.three,
     minHeight: 54,
   },
@@ -370,12 +364,12 @@ const styles = StyleSheet.create({
     gap: Spacing.one + 2,
   },
   dot: {
-    height: 6,
-    borderRadius: 3,
+    height: 3,
+    borderRadius: 2,
   },
   step: {
     flex: 1,
-    paddingHorizontal: Spacing.four - 2,
+    paddingHorizontal: Spacing.four - 4,
   },
   bottomStep: {
     flex: 1,
@@ -385,11 +379,10 @@ const styles = StyleSheet.create({
   },
   scrollStep: {
     gap: Spacing.three - 4,
-    paddingTop: 150,
+    paddingTop: 208,
     paddingBottom: Spacing.three,
   },
   lead: {
-    fontFamily: Fonts.semiBold,
     marginBottom: Spacing.two,
   },
   chips: {
@@ -400,23 +393,24 @@ const styles = StyleSheet.create({
   },
   input: {
     height: 52,
-    backgroundColor: Welcome.fill,
-    borderRadius: Radius.medium - 2,
-    borderWidth: 1,
-    borderColor: Welcome.border,
-    color: Colors.ink,
-    fontFamily: Fonts.medium,
-    fontSize: 18,
-    paddingHorizontal: Spacing.three + 2,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.lineStrong,
+    color: Colors.text,
+    fontFamily: Fonts.regular,
+    fontSize: 19,
   },
   bigInput: {
-    height: 58,
-    fontFamily: Fonts.semiBold,
-    fontSize: 22,
+    height: 62,
+    fontFamily: Fonts.regularItalic,
+    fontSize: 28,
   },
   multiline: {
-    height: 128,
-    paddingTop: Spacing.three - 2,
+    height: 132,
+    borderWidth: 1,
+    borderColor: Colors.line,
+    borderRadius: Radius.small,
+    paddingHorizontal: Spacing.three - 2,
+    paddingTop: Spacing.three - 4,
     textAlignVertical: 'top',
   },
   options: {
@@ -425,32 +419,24 @@ const styles = StyleSheet.create({
   option: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.three - 2,
-    padding: Spacing.three,
+    gap: Spacing.three,
+    paddingHorizontal: Spacing.three + 2,
+    paddingVertical: Spacing.three + 2,
     borderRadius: Radius.medium,
+    borderWidth: 1,
   },
   optionOn: {
-    backgroundColor: Colors.ink,
+    borderColor: Colors.gold,
+    backgroundColor: alpha(Colors.gold, 0.06),
   },
   optionOff: {
-    backgroundColor: Welcome.fill,
-  },
-  optionEmoji: {
-    width: 44,
-    height: 44,
-    borderRadius: Radius.small,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emoji: {
-    fontSize: 22,
-    lineHeight: 28,
+    borderColor: Colors.line,
   },
   optionLabel: {
     flex: 1,
-    fontFamily: Fonts.semiBoldItalic,
-    fontSize: 22,
-    lineHeight: 26,
+    fontFamily: Fonts.italic,
+    fontSize: 24,
+    lineHeight: 28,
   },
   check: {
     width: 26,
@@ -460,15 +446,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   checkOn: {
-    backgroundColor: Colors.lime,
+    backgroundColor: Colors.gold,
   },
   checkOff: {
-    borderWidth: 2,
-    borderColor: Welcome.border,
+    borderWidth: 1.5,
+    borderColor: Colors.lineStrong,
   },
   footer: {
     gap: Spacing.three - 4,
-    paddingHorizontal: Spacing.four - 2,
+    paddingHorizontal: Spacing.four - 4,
     paddingBottom: Spacing.three,
   },
   center: {

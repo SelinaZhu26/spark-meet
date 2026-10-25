@@ -43,12 +43,12 @@ export function IntegrationRow({ provider, integration, onChanged }: Integration
 
   return (
     <View style={styles.row}>
-      <View style={[styles.logo, { backgroundColor: info.color }]}>
+      <View style={styles.logo}>
         <AppText style={styles.logoText}>{info.label.charAt(0)}</AppText>
       </View>
       <View style={styles.text}>
         <AppText style={styles.title}>{info.label}</AppText>
-        <AppText variant="caption" tone="secondary" numberOfLines={2}>
+        <AppText variant="caption" tone="muted" numberOfLines={2}>
           {note ?? integration?.summary ?? info.pitch.toLowerCase()}
         </AppText>
       </View>
@@ -72,15 +72,17 @@ const styles = StyleSheet.create({
   logo: {
     width: 44,
     height: 44,
-    borderRadius: 14,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: Colors.lineStrong,
   },
   logoText: {
-    fontFamily: Fonts.semiBoldItalic,
+    fontFamily: Fonts.regularItalic,
     fontSize: 22,
     lineHeight: 26,
-    color: Colors.ink,
+    color: Colors.text,
   },
   text: {
     flex: 1,

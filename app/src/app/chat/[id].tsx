@@ -11,11 +11,10 @@ import {
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { blockPalette } from '@/components/spark-block';
 import { Button } from '@/components/ui/button';
 import { PressableScale } from '@/components/ui/pressable-scale';
 import { AppText } from '@/components/ui/text';
-import { Colors, Fonts, Radius, Spacing, Tones } from '@/constants/theme';
+import { Colors, Fonts, Radius, Spacing } from '@/constants/theme';
 import { api, errorMessage } from '@/lib/api';
 import type { Message, Spark } from '@/lib/types';
 
@@ -72,8 +71,6 @@ export default function Chat() {
     }
   };
 
-  const dating = spark?.mode === 'dating';
-
   return (
     <KeyboardAvoidingView
       style={styles.screen}
@@ -84,7 +81,7 @@ export default function Chat() {
         data={[...messages].reverse()}
         inverted
         keyExtractor={(message) => String(message.id)}
-        extraData={[historyEnd, dating]}
+        extraData={historyEnd}
         contentContainerStyle={styles.list}
         renderItem={({ item }) => (
           <Animated.View
@@ -94,12 +91,7 @@ export default function Chat() {
                 ? FadeInUp.springify().damping(18)
                 : undefined
             }
-            style={[
-              styles.bubble,
-              item.from_me
-                ? [styles.mine, { backgroundColor: dating ? Tones.dating : Tones.accent }]
-                : styles.theirs,
-            ]}>
+            style={[styles.bubble, item.from_me ? styles.mine : styles.theirs]}>
             <AppText style={item.from_me && styles.mineText}>{item.body}</AppText>
           </Animated.View>
         )}
@@ -110,8 +102,8 @@ export default function Chat() {
               accessibilityHint="Sends the icebreaker"
               onPress={() => send(spark.icebreaker)}
               disabled={sending}
-              style={[styles.starter, { backgroundColor: blockPalette(spark.id, spark.mode)[0] }]}>
-              <AppText variant="label" tone="ink">
+              style={styles.starter}>
+              <AppText variant="label" tone="accent">
                 tap to send
               </AppText>
               <AppText style={styles.starterText}>{spark.icebreaker}</AppText>
@@ -136,7 +128,6 @@ export default function Chat() {
         />
         <Button
           title="send"
-          variant={dating ? 'dating' : 'primary'}
           loading={sending}
           disabled={!draft.trim()}
           onPress={() => send()}
@@ -164,6 +155,7 @@ const styles = StyleSheet.create({
   },
   mine: {
     alignSelf: 'flex-end',
+    backgroundColor: Colors.text,
     borderBottomRightRadius: 6,
   },
   mineText: {
@@ -171,20 +163,24 @@ const styles = StyleSheet.create({
   },
   theirs: {
     alignSelf: 'flex-start',
-    backgroundColor: Colors.surfaceRaised,
+    backgroundColor: Colors.surface,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: Colors.line,
     borderBottomLeftRadius: 6,
   },
   starter: {
     gap: Spacing.two,
-    padding: Spacing.three + 6,
+    padding: Spacing.three + 4,
     marginVertical: Spacing.four,
-    borderRadius: Radius.large,
+    borderRadius: Radius.medium,
+    borderWidth: 1,
+    borderColor: Colors.gold,
   },
   starterText: {
-    fontFamily: Fonts.semiBoldItalic,
+    fontFamily: Fonts.italic,
     fontSize: 25,
-    lineHeight: 30,
-    color: Colors.ink,
+    lineHeight: 31,
+    color: Colors.text,
   },
   error: {
     textAlign: 'center',

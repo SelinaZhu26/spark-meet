@@ -7,25 +7,19 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { SparkRow } from '@/components/spark-row';
 import { useTabBarSpace } from '@/components/tab-bar';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Dots } from '@/components/ui/dots';
 import { rise } from '@/components/ui/rise';
 import { Segmented } from '@/components/ui/segmented';
 import { SparkMark } from '@/components/ui/spark-mark';
 import { AppText } from '@/components/ui/text';
-import { Colors, Spacing, Tones } from '@/constants/theme';
+import { Colors, MarkColors, Spacing, Springs } from '@/constants/theme';
 import { api, errorMessage } from '@/lib/api';
 import { useMe } from '@/lib/session';
 import type { Spark } from '@/lib/types';
 
 const FILTERS = [
   { value: 'friends', label: 'friends', test: (spark: Spark) => spark.mode === 'friends' },
-  {
-    value: 'dating',
-    label: 'dating',
-    color: Tones.dating,
-    test: (spark: Spark) => spark.mode === 'dating',
-  },
+  { value: 'dating', label: 'dating', test: (spark: Spark) => spark.mode === 'dating' },
   { value: 'mutual', label: 'mutual', test: (spark: Spark) => spark.connected },
 ] as const;
 
@@ -78,15 +72,15 @@ export default function Sparks() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={refresh}
-            tintColor={Tones.accent}
+            tintColor={Colors.gold}
             colors={[Colors.ink]}
-            progressBackgroundColor={Tones.accent}
+            progressBackgroundColor={Colors.gold}
           />
         }>
         <Animated.View entering={rise(0)} style={styles.heading}>
-          <AppText variant="title">sparks</AppText>
-          <AppText variant="title" tone="muted">
-            {sparks === null ? ' ' : all.length === 0 ? 'none yet' : `${all.length} so far`}
+          <AppText variant="hero">sparks</AppText>
+          <AppText variant="label" tone="muted" style={styles.count}>
+            {sparks === null || all.length === 0 ? ' ' : `${all.length} so far`}
           </AppText>
         </Animated.View>
 
@@ -104,34 +98,37 @@ export default function Sparks() {
 
         {sparks === null ? (
           <View style={styles.empty}>
-            <Dots color={Tones.accent} />
+            <Dots color={Colors.gold} />
           </View>
         ) : all.length === 0 ? (
           <Animated.View entering={rise(1)} style={styles.empty}>
-            <SparkMark
-              size={80}
-              ink={Colors.textMuted}
-              gold={Colors.textMuted}
-              ash={Colors.surfaceRaised}
-            />
-            <AppText variant="heading">no sparks yet</AppText>
+            <SparkMark size={150} {...MarkColors.unlit} />
+            <AppText variant="title">no sparks yet</AppText>
+            <AppText tone="secondary" style={styles.center}>
+              {profile.active ? "we'll buzz you when one lands" : 'they land while spark is on'}
+            </AppText>
             {!profile.active && (
-              <Button title="turn on spark" onPress={() => router.navigate('/')} />
+              <Button
+                title="turn on spark"
+                onPress={() => router.navigate('/')}
+                style={styles.emptyButton}
+              />
             )}
           </Animated.View>
         ) : (
           <Animated.View entering={rise(2)}>
-            <Card style={styles.list}>
-              {shown.map((spark) => (
-                <Animated.View
-                  key={spark.id}
-                  layout={LinearTransition.springify().damping(20)}
-                  entering={FadeIn.duration(200)}
-                  exiting={FadeOut.duration(150)}>
-                  <SparkRow spark={spark} />
-                </Animated.View>
-              ))}
-            </Card>
+            {shown.map((spark, index) => (
+              <Animated.View
+                key={spark.id}
+                layout={LinearTransition.springify(Springs.slide.duration).dampingRatio(
+                  Springs.slide.dampingRatio
+                )}
+                entering={FadeIn.duration(220)}
+                exiting={FadeOut.duration(150)}
+                style={index > 0 && styles.divider}>
+                <SparkRow spark={spark} />
+              </Animated.View>
+            ))}
           </Animated.View>
         )}
       </ScrollView>
@@ -146,21 +143,33 @@ const styles = StyleSheet.create({
   },
   content: {
     flexGrow: 1,
-    paddingHorizontal: Spacing.three,
-    paddingTop: Spacing.three,
-    gap: Spacing.three + 4,
+    paddingHorizontal: Spacing.four - 4,
+    paddingTop: Spacing.four,
+    gap: Spacing.four - 4,
   },
   heading: {
-    paddingHorizontal: Spacing.one,
-    paddingTop: Spacing.two,
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
   },
-  list: {
-    gap: Spacing.three + 2,
+  count: {
+    marginLeft: Spacing.three,
+  },
+  divider: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: Colors.line,
   },
   empty: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: Spacing.three,
+    gap: Spacing.two,
+  },
+  center: {
+    textAlign: 'center',
+  },
+  emptyButton: {
+    minWidth: 200,
+    marginTop: Spacing.four,
   },
 });

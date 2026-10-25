@@ -4,13 +4,13 @@ import { Dots } from '@/components/ui/dots';
 import { Icon, type IconName } from '@/components/ui/icon';
 import { PressableScale } from '@/components/ui/pressable-scale';
 import { AppText } from '@/components/ui/text';
-import { Colors, Fonts, Radius, Spacing, Tones, Welcome } from '@/constants/theme';
+import { Colors, Fonts, Radius, Spacing } from '@/constants/theme';
 
 export type ButtonProps = {
   title: string;
   onPress: () => void;
-  /** `dark` and `light` are for buttons sitting on a pastel. */
-  variant?: 'primary' | 'dating' | 'dark' | 'ghost' | 'light';
+  /** `primary` is a gold pill, the one lit thing on a screen; `ghost` is a graphite outline. */
+  variant?: 'primary' | 'ghost';
   size?: 'regular' | 'small';
   loading?: boolean;
   disabled?: boolean;
@@ -29,7 +29,9 @@ export function Button({
   style,
 }: ButtonProps) {
   const inactive = disabled || loading;
-  const color = foregrounds[variant];
+  // A disabled gold pill goes unlit: graphite with muted text, rather than a murky gold.
+  const unlit = disabled && variant === 'primary';
+  const color = unlit ? Colors.textMuted : variant === 'primary' ? Colors.ink : Colors.text;
   const small = size === 'small';
 
   return (
@@ -42,14 +44,15 @@ export function Button({
         styles.base,
         small && styles.small,
         styles[variant],
-        disabled && styles.disabled,
+        unlit ? styles.unlit : disabled && styles.disabled,
+        { transitionProperty: 'backgroundColor', transitionDuration: 250 },
         style,
       ]}>
       {loading ? (
         <Dots color={color} size={small ? 5 : 7} />
       ) : (
         <View style={styles.content}>
-          {icon && <Icon name={icon} size={small ? 16 : 20} color={color} />}
+          {icon && <Icon name={icon} size={small ? 16 : 19} color={color} />}
           <AppText style={[styles.title, small && styles.smallTitle, { color }]}>{title}</AppText>
         </View>
       )}
@@ -57,17 +60,9 @@ export function Button({
   );
 }
 
-const foregrounds = {
-  primary: Colors.ink,
-  dating: Colors.ink,
-  dark: Colors.text,
-  ghost: Colors.text,
-  light: Colors.ink,
-} as const;
-
 const styles = StyleSheet.create({
   base: {
-    height: 52,
+    height: 54,
     borderRadius: Radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
@@ -78,19 +73,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
   },
   primary: {
-    backgroundColor: Tones.accent,
-  },
-  dating: {
-    backgroundColor: Tones.dating,
-  },
-  dark: {
-    backgroundColor: Colors.ink,
+    backgroundColor: Colors.gold,
   },
   ghost: {
-    backgroundColor: Colors.surfaceRaised,
+    borderWidth: 1,
+    borderColor: Colors.lineStrong,
   },
-  light: {
-    backgroundColor: Welcome.fill,
+  unlit: {
+    backgroundColor: Colors.surfaceRaised,
   },
   disabled: {
     opacity: 0.4,
@@ -102,8 +92,8 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: Fonts.semiBoldItalic,
-    fontSize: 19,
-    lineHeight: 23,
+    fontSize: 20,
+    lineHeight: 24,
   },
   smallTitle: {
     fontSize: 16,

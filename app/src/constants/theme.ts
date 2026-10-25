@@ -1,65 +1,45 @@
 /**
- * Spark is always dark: a deep plum canvas with bright pastel color blocks
- * and shapes on top. Nothing casts a shadow.
+ * Spark is a sparkler lit in the dark: a warm charcoal night, warm-white
+ * type, graphite hairlines, and gold only where there's light. Nothing
+ * casts a shadow or glows; light is gold strokes and color.
  */
 
 export const Colors = {
-  background: '#17111D',
-  surface: '#211A29',
-  surfaceRaised: '#2D2436',
-  line: 'rgba(255, 255, 255, 0.09)',
-  text: '#FFFFFF',
-  textSecondary: '#B3A7BF',
-  textMuted: '#7D7088',
-  /** Text and icons drawn on a pastel. */
-  ink: '#22182A',
-  yellow: '#FFD97A',
-  pink: '#FF8FB8',
-  lime: '#B5E48C',
-  purple: '#A18BFF',
-  teal: '#7FDCD0',
-  orange: '#FFA173',
-  danger: '#FF6B81',
+  background: '#141312',
+  /** Deeper night behind the spark alert. */
+  night: '#0E0D0C',
+  surface: '#1B1A18',
+  surfaceRaised: '#252321',
+  /** Graphite hairlines around cards, fields and quiet buttons. */
+  line: '#33312E',
+  lineStrong: '#4A4743',
+  text: '#F3EEE5',
+  textSecondary: '#A9A399',
+  textMuted: '#7C766E',
+  /** Text and icons drawn on gold. */
+  ink: '#1E1E1C',
+  gold: '#F5C94E',
+  /** The gold, under the name the notification and foreground-service tints use. */
+  yellow: '#F5C94E',
+  danger: '#EE8C7E',
 } as const;
 
-/** Friends sparks and the brand are yellow, dating sparks are pink. */
-export const Tones = {
-  accent: Colors.yellow,
-  dating: Colors.pink,
-} as const;
-
-export type Tone = keyof typeof Tones;
-
-type BlockPalette = readonly [background: string, first: string, second: string];
-
-/** Color blocks: a background and two shape colors. Dating blocks stay pink and purple. */
-export const BlockPalettes: Record<'friends' | 'dating', readonly BlockPalette[]> = {
-  friends: [
-    [Colors.yellow, Colors.purple, Colors.ink],
-    [Colors.lime, Colors.pink, Colors.ink],
-    [Colors.teal, Colors.yellow, Colors.ink],
-    [Colors.orange, Colors.yellow, Colors.purple],
-  ],
-  dating: [
-    [Colors.pink, Colors.purple, Colors.ink],
-    [Colors.purple, Colors.pink, Colors.yellow],
-  ],
-};
-
-/** The light screens you see before signing in. */
-export const Welcome = {
-  gradient: ['#FFE9A6', '#FFF4EC', '#E7DCFF'],
-  /** Ink at 8% and 20%: input fills and borders on the light screens. */
-  fill: 'rgba(34, 24, 42, 0.08)',
-  border: 'rgba(34, 24, 42, 0.2)',
+/** The logo's strokes, recolored for the dark: unlit is graphite, lit reads as light. */
+export const MarkColors = {
+  unlit: { ink: '#3A3734', gold: '#46423D', ash: '#2C2A27' },
+  lit: { stick: '#7F796F', ink: '#D2CABC', gold: Colors.gold, ash: '#A9A399' },
 } as const;
 
 /** Crimson Pro, loaded in the root layout. Each weight is its own family. */
 export const Fonts = {
+  light: 'CrimsonPro_300Light',
   regular: 'CrimsonPro_400Regular',
   medium: 'CrimsonPro_500Medium',
   semiBold: 'CrimsonPro_600SemiBold',
-  bold: 'CrimsonPro_700Bold',
+  /** Huge numbers, like the match on the spark alert. */
+  thinItalic: 'CrimsonPro_200ExtraLight_Italic',
+  lightItalic: 'CrimsonPro_300Light_Italic',
+  regularItalic: 'CrimsonPro_400Regular_Italic',
   italic: 'CrimsonPro_500Medium_Italic',
   semiBoldItalic: 'CrimsonPro_600SemiBold_Italic',
 } as const;
@@ -75,16 +55,16 @@ export const Spacing = {
 } as const;
 
 export const Radius = {
-  small: 14,
-  medium: 20,
-  large: 26,
+  small: 12,
+  medium: 18,
+  large: 24,
   pill: 999,
 } as const;
 
 /** Every press, pop and slide uses one of these, so motion feels like one system. */
 export const Springs = {
-  press: { duration: 280, dampingRatio: 0.65 },
-  pop: { duration: 520, dampingRatio: 0.55 },
+  press: { duration: 280, dampingRatio: 0.7 },
+  pop: { duration: 520, dampingRatio: 0.6 },
   slide: { duration: 420, dampingRatio: 0.9 },
 } as const;
 

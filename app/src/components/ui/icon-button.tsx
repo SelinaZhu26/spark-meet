@@ -14,6 +14,7 @@ export type IconButtonProps = {
   style?: StyleProp<ViewStyle>;
 };
 
+/** A round button with a graphite hairline. */
 export function IconButton({
   icon,
   onPress,
@@ -44,5 +45,7 @@ const styles = StyleSheet.create({
   base: {
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: Colors.lineStrong,
   },
 });

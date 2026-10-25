@@ -5,137 +5,121 @@ import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-na
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { PressableScale } from '@/components/ui/pressable-scale';
+import { SQUIGGLE_WIDTH, Squiggle } from '@/components/ui/squiggle';
 import { AppText } from '@/components/ui/text';
-import { Colors, Fonts, Radius, Spacing, Springs, alpha } from '@/constants/theme';
+import { Colors, Fonts, Spacing, Springs } from '@/constants/theme';
 
-const PAD = Spacing.two;
-const GAP = Spacing.three - 4;
-const BAR_HEIGHT = 64;
+const BAR_HEIGHT = 58;
 
-/** Bottom padding a tab screen needs so its content can scroll clear of the floating bar. */
+/** Bottom padding a tab screen needs so its content can scroll clear of the bar. */
 export function useTabBarSpace() {
   const { bottom } = useSafeAreaInsets();
-  return Math.max(bottom, GAP) + BAR_HEIGHT + Spacing.four;
+  return Math.max(bottom, Spacing.two) + BAR_HEIGHT + Spacing.four;
 }
 
-/** A floating bar; the highlight slides to the focused tab. */
+/** Italic words along the bottom edge; a gold squiggle slides under the focused tab. */
 export function TabBar({ state, descriptors, emitter, navigateToTab, insets }: BottomTabBarProps) {
   const [width, setWidth] = useState(0);
-  const segment = (width - PAD * 2) / state.routes.length;
+  const segment = width / state.routes.length;
   const x = useSharedValue(0);
 
   useEffect(() => {
     x.set(withSpring(state.index * segment, Springs.slide));
   }, [state.index, segment, x]);
 
-  const highlight = useAnimatedStyle(() => ({ transform: [{ translateX: x.get() }] }));
+  const squiggle = useAnimatedStyle(() => ({ transform: [{ translateX: x.get() }] }));
 
   return (
     <View
       role="tablist"
-      style={[styles.bar, { bottom: Math.max(insets.bottom, GAP) }]}
-      onLayout={(event) => setWidth(event.nativeEvent.layout.width)}>
-      {width > 0 && <Animated.View style={[styles.highlight, { width: segment }, highlight]} />}
-      {state.routes.map((route, index) => {
-        const { options } = descriptors[route.key];
-        const focused = index === state.index;
-        const color = focused ? Colors.text : Colors.textSecondary;
-        const onPress = () => {
-          const event = emitter.emit({
-            type: 'tabPress',
-            target: route.key,
-            canPreventDefault: true,
-          });
-          if (!focused && !event.defaultPrevented) {
-            navigateToTab(route.key);
-          }
-        };
-        return (
-          <PressableScale
-            key={route.key}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: focused }}
-            accessibilityLabel={options.title}
-            onPress={onPress}
-            onLongPress={() => emitter.emit({ type: 'tabLongPress', target: route.key })}
-            pressedScale={0.88}
-            style={styles.tab}>
-            {options.tabBarIcon?.({ focused, color, size: 22 })}
-            <AppText style={[styles.label, { color }]}>{options.title}</AppText>
-          </PressableScale>
-        );
-      })}
+      style={[styles.bar, { paddingBottom: Math.max(insets.bottom, Spacing.two) }]}>
+      <View style={styles.tabs} onLayout={(event) => setWidth(event.nativeEvent.layout.width)}>
+        {width > 0 && (
+          <Animated.View
+            style={[styles.squiggle, { left: (segment - SQUIGGLE_WIDTH) / 2 }, squiggle]}>
+            <Squiggle />
+          </Animated.View>
+        )}
+        {state.routes.map((route, index) => {
+          const { options } = descriptors[route.key];
+          const focused = index === state.index;
+          const color = focused ? Colors.text : Colors.textMuted;
+          const onPress = () => {
+            const event = emitter.emit({
+              type: 'tabPress',
+              target: route.key,
+              canPreventDefault: true,
+            });
+            if (!focused && !event.defaultPrevented) {
+              navigateToTab(route.key);
+            }
+          };
+          return (
+            <PressableScale
+              key={route.key}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: focused }}
+              accessibilityLabel={options.title}
+              onPress={onPress}
+              onLongPress={() => emitter.emit({ type: 'tabLongPress', target: route.key })}
+              pressedScale={0.9}
+              style={styles.tab}>
+              <View>
+                <AppText style={[styles.label, { color }]}>{options.title}</AppText>
+                <View style={styles.adornment}>
+                  {options.tabBarIcon?.({ focused, color, size: 6 })}
+                </View>
+              </View>
+            </PressableScale>
+          );
+        })}
+      </View>
     </View>
   );
 }
 
-/** An emoji tab icon: dimmed when idle, a little bigger when focused. */
-export function TabEmoji({
-  emoji,
-  focused,
-  dot,
-}: {
-  emoji: string;
-  focused: boolean;
-  dot?: string;
-}) {
-  const style = useAnimatedStyle(() => ({
-    opacity: withSpring(focused ? 1 : 0.5, Springs.press),
-    transform: [{ scale: withSpring(focused ? 1.12 : 1, Springs.pop) }],
-  }));
-  return (
-    <View>
-      <Animated.Text style={[styles.emoji, style]}>{emoji}</Animated.Text>
-      {dot && <View style={[styles.dot, { backgroundColor: dot }]} />}
-    </View>
-  );
+/** A gold speck beside a tab's name, e.g. while Spark is on. */
+export function TabSpeck() {
+  return <View style={styles.speck} />;
 }
 
 const styles = StyleSheet.create({
   bar: {
     position: 'absolute',
-    left: GAP,
-    right: GAP,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: Colors.background,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: Colors.line,
+  },
+  tabs: {
     height: BAR_HEIGHT,
     flexDirection: 'row',
-    padding: PAD,
-    borderRadius: Radius.large,
-    backgroundColor: alpha(Colors.surface, 0.96),
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: Colors.line,
-  },
-  highlight: {
-    position: 'absolute',
-    top: PAD,
-    bottom: PAD,
-    left: PAD,
-    borderRadius: Radius.medium - 2,
-    backgroundColor: Colors.surfaceRaised,
   },
   tab: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: Spacing.half,
   },
   label: {
-    fontFamily: Fonts.medium,
-    fontSize: 13,
-    lineHeight: 15,
-  },
-  emoji: {
+    fontFamily: Fonts.italic,
     fontSize: 20,
     lineHeight: 24,
-    textAlign: 'center',
   },
-  dot: {
+  adornment: {
     position: 'absolute',
-    top: 0,
-    right: -4,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    borderWidth: 1.5,
-    borderColor: Colors.surface,
+    top: Spacing.one + 1,
+    right: -Spacing.three + 4,
+  },
+  squiggle: {
+    position: 'absolute',
+    bottom: Spacing.one + 1,
+  },
+  speck: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: Colors.gold,
   },
 });

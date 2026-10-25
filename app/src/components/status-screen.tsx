@@ -4,7 +4,7 @@ import { Button, type ButtonProps } from '@/components/ui/button';
 import { Dots } from '@/components/ui/dots';
 import { SparkMark } from '@/components/ui/spark-mark';
 import { AppText } from '@/components/ui/text';
-import { Colors, Spacing, Tones } from '@/constants/theme';
+import { Colors, MarkColors, Spacing } from '@/constants/theme';
 
 export type StatusScreenProps = {
   title?: string;
@@ -18,12 +18,7 @@ export function StatusScreen({ title, message, actions = [] }: StatusScreenProps
     <View style={styles.screen}>
       {title ? (
         <>
-          <SparkMark
-            size={72}
-            ink={Colors.textMuted}
-            gold={Colors.textMuted}
-            ash={Colors.surfaceRaised}
-          />
+          <SparkMark size={88} {...MarkColors.unlit} />
           <AppText variant="title" style={styles.center}>
             {title}
           </AppText>
@@ -37,7 +32,7 @@ export function StatusScreen({ title, message, actions = [] }: StatusScreenProps
           ))}
         </>
       ) : (
-        <Dots color={Tones.accent} size={10} />
+        <Dots color={Colors.gold} size={10} />
       )}
     </View>
   );
