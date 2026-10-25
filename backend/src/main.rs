@@ -33,7 +33,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     } else {
         connect(&config.pings_database_url).await?
     };
-    db::migrate(&db, &pings_db).await?;
 
     tokio::spawn(prune_pings(pings_db.clone()));
 

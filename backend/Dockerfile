@@ -2,8 +2,6 @@ FROM rust:1-bookworm AS build
 WORKDIR /app
 COPY Cargo.toml Cargo.lock ./
 COPY .sqlx .sqlx
-COPY migrations migrations
-COPY migrations_pings migrations_pings
 COPY src src
 ENV SQLX_OFFLINE=true
 RUN cargo build --release
