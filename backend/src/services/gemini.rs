@@ -10,6 +10,9 @@ use crate::{
 };
 
 const API_BASE: &str = "https://generativelanguage.googleapis.com/v1beta";
+/// Gemini sheds load with 404/429/503s under high demand; one retry after a
+/// pause usually gets through.
+const JUDGE_RETRY_DELAY: std::time::Duration = std::time::Duration::from_secs(2);
 const EMBEDDING_DIMENSIONS: u32 = 768;
 
 const JUDGE_INSTRUCTIONS: &str = "\
@@ -104,7 +107,18 @@ impl Gemini {
                 "responseSchema": judgement_schema(&allowed),
             },
         });
-        let response: GenerateResponse = self.post(&url, &body).await?;
+        match self.try_judge(&url, &body).await {
+            Ok(judgement) => Ok(judgement),
+            Err(err) => {
+                tracing::warn!(error = %err, "Gemini verdict failed; retrying once");
+                tokio::time::sleep(JUDGE_RETRY_DELAY).await;
+                self.try_judge(&url, &body).await
+            }
+        }
+    }
+
+    async fn try_judge(&self, url: &str, body: &Value) -> AppResult<Judgement> {
+        let response: GenerateResponse = self.post(url, body).await?;
         parse_judgement(response)
     }
 

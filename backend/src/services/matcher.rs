@@ -16,10 +16,11 @@ use crate::{
     db::{
         encounters::{self, Verdict},
         pings,
-        profiles::{self, Candidate},
+        profiles::{self, Candidate, Profile},
     },
     errors::AppResult,
     services::{
+        gemini::Judgement,
         interest_profile,
         push::{self, Notification},
     },
@@ -172,10 +173,17 @@ async fn evaluate(
         interest_profile::load(state, a.id),
         interest_profile::load(state, b.id),
     )?;
-    let judgement = state
+    let judgement = match state
         .gemini
         .judge(&profile_a.document, &profile_b.document, modes)
-        .await?;
+        .await
+    {
+        Ok(judgement) => judgement,
+        Err(err) => {
+            tracing::warn!(%encounter_id, error = %err, "Gemini unavailable; using local verdict");
+            local_judgement(&profile_a.profile, &profile_b.profile, modes)
+        }
+    };
     let score = judgement.score.clamp(0, 100) as i16;
     let mode = pick_mode(&judgement.mode, modes);
     // Cards are shown before anyone waves, so a verdict that quotes a bio
@@ -226,6 +234,52 @@ async fn evaluate(
         }
     }
     Ok(())
+}
+
+/// Deterministic stand-in for when Gemini is down: interests both people
+/// listed by name, scored by how many there are.
+fn local_judgement(a: &Profile, b: &Profile, modes: &[Mode]) -> Judgement {
+    let shared = a
+        .interests
+        .iter()
+        .filter(|interest| {
+            b.interests
+                .iter()
+                .any(|other| other.eq_ignore_ascii_case(interest))
+        })
+        .take(5)
+        .cloned()
+        .collect::<Vec<_>>();
+    let (score, reason, icebreaker) = match shared.as_slice() {
+        [] => (40, String::new(), String::new()),
+        [only] => (
+            74,
+            format!("You both love {}.", only.to_lowercase()),
+            format!("What got you into {}?", only.to_lowercase()),
+        ),
+        [init @ .., last] => (
+            (62 + 12 * shared.len() as i64).min(95),
+            format!(
+                "You both love {} and {}.",
+                init.iter()
+                    .map(|s| s.to_lowercase())
+                    .collect::<Vec<_>>()
+                    .join(", "),
+                last.to_lowercase()
+            ),
+            format!("What got you into {}?", init[0].to_lowercase()),
+        ),
+    };
+    Judgement {
+        mode: modes
+            .first()
+            .map_or("none", |mode| mode.as_str())
+            .to_owned(),
+        shared_interests: shared,
+        reason,
+        score,
+        icebreaker,
+    }
 }
 
 /// Words in a row that count as quoting someone's bio.
@@ -294,6 +348,42 @@ mod tests {
         assert_eq!(pick_mode("friends", &[Mode::Dating]), None);
         assert_eq!(pick_mode("none", &[Mode::Friends, Mode::Dating]), None);
         assert_eq!(pick_mode("enemies", &[Mode::Friends]), None);
+    }
+
+    fn profile(interests: &[&str]) -> Profile {
+        Profile {
+            id: Uuid::new_v4(),
+            display_name: "x".into(),
+            bio: String::new(),
+            avatar_url: None,
+            interests: interests
+                .iter()
+                .map(|interest| interest.to_string())
+                .collect(),
+            friends_enabled: true,
+            dating_enabled: false,
+            active: true,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+        }
+    }
+
+    #[test]
+    fn local_verdict_sparks_on_shared_interests_only() {
+        let climber = profile(&["Bouldering", "Jazz", "Coffee"]);
+        let verdict = local_judgement(
+            &climber,
+            &profile(&["coffee", "bouldering"]),
+            &[Mode::Friends],
+        );
+        assert_eq!(verdict.shared_interests, ["Bouldering", "Coffee"]);
+        assert_eq!(verdict.reason, "You both love bouldering and coffee.");
+        assert_eq!(verdict.mode, "friends");
+        assert!(verdict.score >= 70);
+
+        let verdict = local_judgement(&climber, &profile(&["Chess"]), &[Mode::Friends]);
+        assert!(verdict.shared_interests.is_empty());
+        assert!(verdict.score < 70);
     }
 
     #[test]
