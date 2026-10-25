@@ -54,7 +54,8 @@
       [
         "expo-notifications",
         {
-          "color": "#FF6A1F"
+          "color": "#FF6A1F",
+          "enableRemoteNotifications": false
         }
       ],
       "expo-sqlite",
