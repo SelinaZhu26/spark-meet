@@ -19,9 +19,9 @@ import type { Spark } from '@/lib/types';
 
 const LOCATION_TASK = 'spark-presence';
 /** Pings closer together than this are dropped. */
-const MIN_PING_INTERVAL_MS = 5_000;
+const MIN_PING_INTERVAL_MS = 2_500;
 /** Re-sends the last fix so standing still doesn't make you invisible. */
-const HEARTBEAT_MS = 10_000;
+const HEARTBEAT_MS = 3_000;
 
 export type PresenceMode = 'background' | 'foreground';
 

@@ -16,7 +16,7 @@ use crate::{
 /// Fixes less accurate than this are too vague to say who's "right here".
 const MAX_ACCURACY_M: f32 = 100.0;
 /// Pings closer together than this are not matched again.
-const MIN_PING_INTERVAL_SECS: f64 = 3.0;
+const MIN_PING_INTERVAL_SECS: f64 = 2.0;
 /// Faster apparent movement than this (~250 km/h) means a spoofed location.
 /// Together with the interval this makes sweeping fake locations to find
 /// someone impractical.

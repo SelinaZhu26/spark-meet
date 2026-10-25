@@ -43,7 +43,7 @@ Both phones report pings, so both "see" the encounter. The database's unique con
 - **Separate pools.** Friends and dating are separate. A dating spark requires both people to have opted into dating, enforced in code (`shared_modes`, `pick_mode`), not just in the prompt.
 - **No identifying data goes to Gemini.** Interest profiles contain interests, bio and linked-account summaries, never names. Profiles are delimited and the model is told to ignore instructions inside them.
 - **Linked accounts are a one-time snapshot.** OAuth tokens are used once to read top artists or recent activities, then discarded.
-- **Spoofed locations are throttled.** Pings closer than 3 s apart or implying more than ~250 km/h aren't matched, so sweeping fake coordinates to find someone is impractical.
+- **Spoofed locations are throttled.** Pings closer than 2 s apart or implying more than ~250 km/h aren't matched, so sweeping fake coordinates to find someone is impractical.
 - **Verdicts can't quote bios.** Cards are shown before anyone waves, so a Gemini verdict that repeats five or more words of either bio is discarded.
 - Supabase tables have row-level security enabled with no policies, so the auto-generated Supabase REST API can't read them. Only the backend (table owner) can.
 
