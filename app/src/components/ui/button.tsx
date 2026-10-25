@@ -1,13 +1,14 @@
-import { LinearGradient } from 'expo-linear-gradient';
-import { ActivityIndicator, Pressable, StyleSheet, View, type ViewStyle } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, type ViewStyle } from 'react-native';
 
 import { AppText } from '@/components/ui/text';
-import { Colors, Gradients, Radius, Spacing } from '@/constants/theme';
+import { Colors, Radius, Spacing } from '@/constants/theme';
 
 export type ButtonProps = {
   title: string;
   onPress: () => void;
-  variant?: 'primary' | 'dating' | 'secondary' | 'ghost';
+  variant?: 'primary' | 'secondary' | 'ghost';
+  /** Fill for a primary button, e.g. the spark's own card color. Defaults to white. */
+  color?: string;
   loading?: boolean;
   disabled?: boolean;
   icon?: string;
@@ -18,26 +19,15 @@ export function Button({
   title,
   onPress,
   variant = 'primary',
+  color = Colors.text,
   loading = false,
   disabled = false,
   icon,
   style,
 }: ButtonProps) {
   const inactive = disabled || loading;
-  const filled = variant === 'primary' || variant === 'dating';
-  const label = (
-    <View style={styles.content}>
-      {loading ? (
-        <ActivityIndicator color={filled ? Colors.background : Colors.text} />
-      ) : (
-        <AppText
-          variant="heading"
-          style={[styles.title, { color: filled ? Colors.background : Colors.text }]}>
-          {icon ? `${icon}  ${title}` : title}
-        </AppText>
-      )}
-    </View>
-  );
+  const filled = variant === 'primary';
+  const textColor = filled ? Colors.ink : variant === 'ghost' ? Colors.textSecondary : Colors.text;
 
   return (
     <Pressable
@@ -47,20 +37,17 @@ export function Button({
       disabled={inactive}
       style={({ pressed }) => [
         styles.base,
+        filled && { backgroundColor: color },
         variant === 'secondary' && styles.secondary,
-        { opacity: inactive ? 0.5 : pressed ? 0.85 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] },
+        { opacity: inactive ? 0.45 : 1, transform: [{ scale: pressed ? 0.96 : 1 }] },
         style,
       ]}>
-      {filled ? (
-        <LinearGradient
-          colors={variant === 'dating' ? Gradients.dating : Gradients.ember}
-          start={{ x: 0, y: 0.5 }}
-          end={{ x: 1, y: 0.5 }}
-          style={styles.fill}>
-          {label}
-        </LinearGradient>
+      {loading ? (
+        <ActivityIndicator color={textColor} />
       ) : (
-        label
+        <AppText variant="heading" style={[styles.title, { color: textColor }]}>
+          {icon ? `${icon}  ${title}` : title}
+        </AppText>
       )}
     </Pressable>
   );
@@ -69,23 +56,13 @@ export function Button({
 const styles = StyleSheet.create({
   base: {
     borderRadius: Radius.pill,
-    overflow: 'hidden',
     minHeight: 56,
+    paddingHorizontal: Spacing.four,
+    alignItems: 'center',
     justifyContent: 'center',
   },
   secondary: {
     backgroundColor: Colors.surfaceRaised,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  fill: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  content: {
-    paddingHorizontal: Spacing.four,
-    paddingVertical: Spacing.three,
-    alignItems: 'center',
   },
   title: {
     fontSize: 17,

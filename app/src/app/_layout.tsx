@@ -4,6 +4,7 @@ import { DarkTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { SparkRuntime } from '@/components/spark-runtime';
 import { StatusScreen } from '@/components/status-screen';
@@ -16,7 +17,7 @@ const theme = {
   ...DarkTheme,
   colors: {
     ...DarkTheme.colors,
-    primary: Colors.ember,
+    primary: Colors.wave,
     background: Colors.background,
     card: Colors.background,
     text: Colors.text,
@@ -26,12 +27,14 @@ const theme = {
 
 export default function RootLayout() {
   return (
-    <SessionProvider>
-      <ThemeProvider value={theme}>
-        <StatusBar style="light" />
-        <RootNavigator />
-      </ThemeProvider>
-    </SessionProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SessionProvider>
+        <ThemeProvider value={theme}>
+          <StatusBar style="light" />
+          <RootNavigator />
+        </ThemeProvider>
+      </SessionProvider>
+    </GestureHandlerRootView>
   );
 }
 

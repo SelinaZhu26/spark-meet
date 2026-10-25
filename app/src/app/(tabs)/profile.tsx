@@ -18,7 +18,7 @@ export default function Profile() {
     <SafeAreaView style={styles.screen} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.header}>
-          <Avatar name={profile.display_name} url={profile.avatar_url} size={72} />
+          <Avatar name={profile.display_name} url={profile.avatar_url} size={80} />
           <View style={styles.headerText}>
             <AppText variant="title">{profile.display_name}</AppText>
             <AppText tone="secondary">This is what Spark matches on.</AppText>
@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   content: {
-    padding: Spacing.four,
+    padding: Spacing.three,
     paddingBottom: Spacing.six,
     gap: Spacing.five,
   },

@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/components/ui/text';
 import { Colors, Radius, Spacing } from '@/constants/theme';
 import { api, errorMessage } from '@/lib/api';
+import { pastel } from '@/lib/moment';
 import type { Message, Spark } from '@/lib/types';
 
 const POLL_MS = 3_000;
@@ -67,6 +68,8 @@ export default function Chat() {
     }
   };
 
+  const color = spark ? pastel(spark) : Colors.wave;
+
   return (
     <KeyboardAvoidingView
       style={styles.screen}
@@ -79,7 +82,7 @@ export default function Chat() {
         keyExtractor={(message) => String(message.id)}
         contentContainerStyle={styles.list}
         renderItem={({ item }) => (
-          <View style={[styles.bubble, item.from_me ? styles.mine : styles.theirs]}>
+          <View style={[styles.bubble, item.from_me ? [styles.mine, { backgroundColor: color }] : styles.theirs]}>
             <AppText style={item.from_me ? styles.mineText : undefined}>{item.body}</AppText>
           </View>
         )}
@@ -89,8 +92,10 @@ export default function Chat() {
               <AppText variant="caption" tone="muted">
                 You matched on {spark.shared_interests.join(', ').toLowerCase()}. Break the ice:
               </AppText>
-              <Pressable onPress={() => send(spark.icebreaker)} style={styles.suggestion}>
-                <AppText>“{spark.icebreaker}”</AppText>
+              <Pressable onPress={() => send(spark.icebreaker)} style={[styles.suggestion, { backgroundColor: color }]}>
+                <AppText variant="heading" tone="ink">
+                  {spark.icebreaker}
+                </AppText>
               </Pressable>
             </View>
           ) : undefined
@@ -118,6 +123,7 @@ export default function Chat() {
           disabled={sending || !draft.trim()}
           style={({ pressed }) => [
             styles.send,
+            { backgroundColor: color },
             (pressed || sending || !draft.trim()) && styles.sendDisabled,
           ]}>
           <AppText style={styles.sendText}>↑</AppText>
@@ -140,15 +146,14 @@ const styles = StyleSheet.create({
     maxWidth: '80%',
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two + 2,
-    borderRadius: Radius.medium + 4,
+    borderRadius: Radius.medium,
   },
   mine: {
     alignSelf: 'flex-end',
-    backgroundColor: Colors.ember,
     borderBottomRightRadius: 6,
   },
   mineText: {
-    color: Colors.background,
+    color: Colors.ink,
   },
   theirs: {
     alignSelf: 'flex-start',
@@ -163,9 +168,7 @@ const styles = StyleSheet.create({
   suggestion: {
     padding: Spacing.three,
     borderRadius: Radius.medium,
-    borderWidth: 1,
-    borderColor: Colors.ember,
-    borderStyle: 'dashed',
+    maxWidth: 300,
   },
   error: {
     textAlign: 'center',
@@ -177,16 +180,12 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
     paddingHorizontal: Spacing.three,
     paddingTop: Spacing.two,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: Colors.border,
   },
   input: {
     flex: 1,
     maxHeight: 120,
-    backgroundColor: Colors.surface,
+    backgroundColor: Colors.surfaceRaised,
     borderRadius: Radius.large,
-    borderWidth: 1,
-    borderColor: Colors.border,
     color: Colors.text,
     fontSize: 16,
     paddingHorizontal: Spacing.three,
@@ -198,7 +197,6 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.ember,
   },
   sendDisabled: {
     opacity: 0.5,
@@ -207,6 +205,6 @@ const styles = StyleSheet.create({
     fontSize: 22,
     lineHeight: 26,
     fontWeight: 800,
-    color: Colors.background,
+    color: Colors.ink,
   },
 });

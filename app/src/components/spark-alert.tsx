@@ -1,12 +1,14 @@
-import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
+import { useState } from 'react';
 import { Modal, StyleSheet, View } from 'react-native';
-import Animated, { ZoomIn } from 'react-native-reanimated';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import Animated, { SlideInDown } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Button } from '@/components/ui/button';
-import { Chip } from '@/components/ui/chip';
+import { SwipeDeck, type Decision } from '@/components/swipe-deck';
 import { AppText } from '@/components/ui/text';
-import { Colors, Gradients, Radius, Spacing } from '@/constants/theme';
-import { sparkTeaser } from '@/lib/notifications';
+import { Colors, Spacing } from '@/constants/theme';
+import { api } from '@/lib/api';
 import type { Spark } from '@/lib/types';
 
 export type SparkAlertProps = {
@@ -15,45 +17,46 @@ export type SparkAlertProps = {
   onDismiss: () => void;
 };
 
-/** Full-screen "someone's near" moment shown when a spark lands in the foreground. */
+/** The card that pops up over everything when a spark lands in the foreground. */
 export function SparkAlert({ spark, onOpen, onDismiss }: SparkAlertProps) {
-  const dating = spark?.mode === 'dating';
+  const insets = useSafeAreaInsets();
+  const [waving, setWaving] = useState(false);
+
+  const decide = async (decided: Spark, decision: Decision) => {
+    if (decision === 'pass') {
+      onDismiss();
+      return;
+    }
+    setWaving(true);
+    try {
+      const next = await api.wave(decided.id);
+      Haptics.notificationAsync(
+        next.connected
+          ? Haptics.NotificationFeedbackType.Success
+          : Haptics.NotificationFeedbackType.Warning
+      );
+    } catch (error) {
+      console.warn('[spark] could not wave', error);
+    } finally {
+      setWaving(false);
+    }
+    onOpen(decided);
+  };
+
   return (
     <Modal visible={!!spark} transparent animationType="fade" onRequestClose={onDismiss}>
-      <View style={styles.backdrop}>
+      <GestureHandlerRootView
+        style={[styles.backdrop, { paddingTop: insets.top + Spacing.four, paddingBottom: insets.bottom + Spacing.four }]}>
         {spark && (
-          <Animated.View entering={ZoomIn.springify().damping(14)} style={styles.sheet}>
-            <LinearGradient
-              colors={dating ? Gradients.dating : Gradients.ember}
-              style={styles.flare}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}>
-              <AppText style={styles.bolt}>{dating ? '💗' : '⚡'}</AppText>
-            </LinearGradient>
-            <AppText variant="label" tone={dating ? 'dating' : 'ember'}>
-              {dating ? 'Dating spark' : 'Spark'} · {spark.score}% match
-            </AppText>
-            <AppText variant="title" style={styles.center}>
-              {sparkTeaser(spark)}
-            </AppText>
-            <View style={styles.chips}>
-              {spark.shared_interests.map((interest) => (
-                <Chip key={interest} label={interest} selected tone={dating ? 'dating' : 'ember'} />
-              ))}
+          <Animated.View entering={SlideInDown.springify().damping(18)} style={styles.sheet}>
+            <View style={styles.header}>
+              <View style={styles.dot} />
+              <AppText variant="heading">Someone&apos;s near you</AppText>
             </View>
-            <AppText tone="secondary" style={styles.center}>
-              They don&apos;t know who you are, and you don&apos;t know who they are. Wave to find out.
-            </AppText>
-            <Button
-              title="See the spark"
-              variant={dating ? 'dating' : 'primary'}
-              onPress={() => onOpen(spark)}
-              style={styles.button}
-            />
-            <Button title="Later" variant="ghost" onPress={onDismiss} style={styles.button} />
+            <SwipeDeck sparks={[spark]} onDecide={decide} onOpen={onOpen} disabled={waving} />
           </Animated.View>
         )}
-      </View>
+      </GestureHandlerRootView>
     </Modal>
   );
 }
@@ -61,41 +64,23 @@ export function SparkAlert({ spark, onOpen, onDismiss }: SparkAlertProps) {
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(5, 3, 2, 0.86)',
-    justifyContent: 'center',
-    padding: Spacing.four,
+    backgroundColor: 'rgba(12, 10, 14, 0.9)',
+    paddingHorizontal: Spacing.three,
   },
   sheet: {
-    alignItems: 'center',
+    flex: 1,
     gap: Spacing.three,
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.large,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    padding: Spacing.four,
-    paddingTop: Spacing.five,
   },
-  flare: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  bolt: {
-    fontSize: 48,
-    lineHeight: 58,
-  },
-  center: {
-    textAlign: 'center',
-  },
-  chips: {
+  header: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.two,
   },
-  button: {
-    alignSelf: 'stretch',
+  dot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: Colors.live,
   },
 });

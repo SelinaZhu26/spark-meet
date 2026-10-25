@@ -16,7 +16,7 @@ export function StatusScreen({ title, message, actions = [] }: StatusScreenProps
     <View style={styles.screen}>
       {title ? (
         <>
-          <AppText style={styles.bolt}>⚡</AppText>
+          <View style={styles.mark} />
           <AppText variant="title" style={styles.center}>
             {title}
           </AppText>
@@ -30,7 +30,7 @@ export function StatusScreen({ title, message, actions = [] }: StatusScreenProps
           ))}
         </>
       ) : (
-        <ActivityIndicator size="large" color={Colors.flame} />
+        <ActivityIndicator size="large" color={Colors.text} />
       )}
     </View>
   );
@@ -45,9 +45,12 @@ const styles = StyleSheet.create({
     padding: Spacing.four,
     backgroundColor: Colors.background,
   },
-  bolt: {
-    fontSize: 56,
-    lineHeight: 68,
+  mark: {
+    width: 56,
+    height: 72,
+    borderRadius: 16,
+    backgroundColor: Colors.wave,
+    transform: [{ rotate: '-8deg' }],
   },
   center: {
     textAlign: 'center',

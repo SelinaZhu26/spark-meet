@@ -1,35 +1,36 @@
 /**
- * Spark is always dark: a warm, low-light canvas so the ember glow pops.
+ * Spark is always dark: a plum-black canvas where each spark is a bright
+ * pastel card that pops up and gets swiped away.
  */
 
 import { Platform } from 'react-native';
 
 export const Colors = {
-  background: '#0D0907',
-  surface: '#1A1310',
-  surfaceRaised: '#251B16',
-  border: '#3A2A22',
-  text: '#FFF4EC',
-  textSecondary: '#B9A79C',
-  textMuted: '#7C6B61',
-  ember: '#FF6A1F',
-  flame: '#FFB23F',
-  glow: '#FFD873',
-  dating: '#FF4F8B',
-  datingSoft: '#3A1424',
-  danger: '#FF5A5A',
-  success: '#5EE6A0',
+  background: '#16131A',
+  surface: '#221E27',
+  surfaceRaised: '#2D2833',
+  border: '#3A3441',
+  text: '#FBF8FF',
+  textSecondary: '#B7AFC2',
+  textMuted: '#7D7488',
+  /** Text on a pastel card. */
+  ink: '#1C1722',
+  /** Spark is switched on. */
+  live: '#8EF0B4',
+  wave: '#FFB1CF',
+  danger: '#FF7A85',
+  success: '#8EF0B4',
 } as const;
 
-/** Friends get the ember gradient, dating gets a rose one. */
-export const Gradients = {
-  ember: ['#FF4D1A', '#FF8A1F', '#FFC23F'],
-  dating: ['#FF3D7F', '#FF6A9A', '#FFB0A0'],
-  ash: ['#2A1F1A', '#1A1310'],
+/** Card colors. Friends sparks get the cool half, dating sparks the warm half. */
+export const Pastels = {
+  friends: ['#9FE2C5', '#FFE38A', '#A9D4FF'],
+  dating: ['#FFB1CF', '#CDB8FF', '#FFB8A8'],
 } as const;
 
 export const Fonts = Platform.select({
   ios: { rounded: 'ui-rounded', mono: 'ui-monospace' },
+  web: { rounded: 'ui-rounded, system-ui, sans-serif', mono: 'ui-monospace, monospace' },
   default: { rounded: 'normal', mono: 'monospace' },
 });
 
@@ -44,8 +45,8 @@ export const Spacing = {
 } as const;
 
 export const Radius = {
-  small: 10,
-  medium: 16,
-  large: 28,
+  small: 12,
+  medium: 20,
+  large: 32,
   pill: 999,
 } as const;

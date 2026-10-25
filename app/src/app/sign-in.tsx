@@ -1,13 +1,19 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/ui/button';
 import { AppText } from '@/components/ui/text';
-import { Colors, Gradients, Radius, Spacing } from '@/constants/theme';
+import { Colors, Pastels, Radius, Spacing } from '@/constants/theme';
 import { errorMessage } from '@/lib/api';
 import { supabase } from '@/lib/supabase';
+
+/** Example sparks fanned out behind the wordmark. */
+const FAN = [
+  { title: 'Jazz & Film', when: '3m ago', color: Pastels.dating[1], rotate: '-12deg', left: 0 },
+  { title: 'Startups & AI', when: 'Just now', color: Pastels.friends[1], rotate: '10deg', left: 120 },
+  { title: 'Bouldering & Coffee', when: 'Just now', color: Pastels.friends[0], rotate: '-2deg', left: 60 },
+] as const;
 
 export default function SignIn() {
   const [email, setEmail] = useState('');
@@ -40,13 +46,23 @@ export default function SignIn() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.content}>
         <View style={styles.hero}>
-          <LinearGradient
-            colors={Gradients.ember}
-            style={styles.logo}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}>
-            <AppText style={styles.bolt}>⚡</AppText>
-          </LinearGradient>
+          <View style={styles.fan}>
+            {FAN.map((card) => (
+              <View
+                key={card.title}
+                style={[
+                  styles.fanCard,
+                  { backgroundColor: card.color, left: card.left, transform: [{ rotate: card.rotate }] },
+                ]}>
+                <AppText variant="caption" tone="ink">
+                  {card.when}
+                </AppText>
+                <AppText variant="heading" tone="ink">
+                  {card.title}
+                </AppText>
+              </View>
+            ))}
+          </View>
           <AppText variant="display">spark</AppText>
           <AppText tone="secondary" style={styles.tagline}>
             The people you&apos;d click with are already around you. Spark buzzes when one walks by.
@@ -106,7 +122,7 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     justifyContent: 'space-between',
-    padding: Spacing.four,
+    padding: Spacing.three,
   },
   hero: {
     flex: 1,
@@ -114,17 +130,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: Spacing.three,
   },
-  logo: {
-    width: 112,
-    height: 112,
-    borderRadius: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-    transform: [{ rotate: '-8deg' }],
+  fan: {
+    width: 260,
+    height: 210,
+    marginBottom: Spacing.two,
   },
-  bolt: {
-    fontSize: 60,
-    lineHeight: 72,
+  fanCard: {
+    position: 'absolute',
+    top: 10,
+    width: 140,
+    height: 180,
+    borderRadius: Radius.medium,
+    padding: Spacing.three,
+    justifyContent: 'space-between',
   },
   tagline: {
     textAlign: 'center',
@@ -134,10 +152,8 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
   },
   input: {
-    backgroundColor: Colors.surface,
+    backgroundColor: Colors.surfaceRaised,
     borderRadius: Radius.pill,
-    borderWidth: 1,
-    borderColor: Colors.border,
     color: Colors.text,
     fontSize: 16,
     paddingHorizontal: Spacing.four,

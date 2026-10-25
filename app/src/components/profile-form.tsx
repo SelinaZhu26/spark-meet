@@ -4,7 +4,7 @@ import { StyleSheet, TextInput, View } from 'react-native';
 import { Button } from '@/components/ui/button';
 import { Chip } from '@/components/ui/chip';
 import { AppText } from '@/components/ui/text';
-import { Colors, Radius, Spacing } from '@/constants/theme';
+import { Colors, Pastels, Radius, Spacing } from '@/constants/theme';
 import { api, errorMessage } from '@/lib/api';
 import type { Me, ProfileInput } from '@/lib/types';
 
@@ -124,7 +124,10 @@ export function ProfileForm({ initial, submitLabel, onSaved }: ProfileFormProps)
         />
       </Field>
 
-      <Field label={`Interests · ${interests.length}/${MAX_INTERESTS}`} hint="The more specific, the better the sparks.">
+      <Field
+        label="Interests"
+        aside={`${interests.length}/${MAX_INTERESTS}`}
+        hint="The more specific, the better the sparks.">
         <View style={styles.chips}>
           {[...SUGGESTED_INTERESTS, ...customInterests].map((interest) => (
             <Chip
@@ -150,8 +153,18 @@ export function ProfileForm({ initial, submitLabel, onSaved }: ProfileFormProps)
 
       <Field label="Looking for" hint="Separate pools. Dating sparks only happen between two people who both opted in.">
         <View style={styles.chips}>
-          <Chip label="🤝  Friends" selected={friends} onPress={() => setFriends(!friends)} />
-          <Chip label="💗  Dating" tone="dating" selected={dating} onPress={() => setDating(!dating)} />
+          <Chip
+            label="Friends"
+            color={Pastels.friends[0]}
+            selected={friends}
+            onPress={() => setFriends(!friends)}
+          />
+          <Chip
+            label="Dating"
+            color={Pastels.dating[0]}
+            selected={dating}
+            onPress={() => setDating(!dating)}
+          />
         </View>
       </Field>
 
@@ -167,12 +180,19 @@ export function ProfileForm({ initial, submitLabel, onSaved }: ProfileFormProps)
   );
 }
 
-function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
+type FieldProps = { label: string; aside?: string; hint?: string; children: React.ReactNode };
+
+function Field({ label, aside, hint, children }: FieldProps) {
   return (
     <View style={styles.field}>
-      <AppText variant="label" tone="secondary">
-        {label}
-      </AppText>
+      <View style={styles.fieldHeader}>
+        <AppText variant="heading">{label}</AppText>
+        {aside && (
+          <AppText variant="caption" tone="muted">
+            {aside}
+          </AppText>
+        )}
+      </View>
       {hint && (
         <AppText variant="caption" tone="muted">
           {hint}
@@ -190,11 +210,14 @@ const styles = StyleSheet.create({
   field: {
     gap: Spacing.two,
   },
+  fieldHeader: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
+  },
   input: {
-    backgroundColor: Colors.surface,
+    backgroundColor: Colors.surfaceRaised,
     borderRadius: Radius.medium,
-    borderWidth: 1,
-    borderColor: Colors.border,
     color: Colors.text,
     fontSize: 16,
     paddingHorizontal: Spacing.three,

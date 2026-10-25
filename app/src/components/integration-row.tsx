@@ -58,7 +58,7 @@ export function IntegrationRow({ provider, integration, onChanged }: Integration
           integration && styles.actionConnected,
           (pressed || busy) && styles.pressed,
         ]}>
-        <AppText variant="caption" style={styles.actionText}>
+        <AppText variant="caption" style={[styles.actionText, !!integration && styles.actionTextConnected]}>
           {busy ? '…' : integration ? 'Unlink' : 'Link'}
         </AppText>
       </Pressable>
@@ -85,13 +85,16 @@ const styles = StyleSheet.create({
     borderRadius: Radius.pill,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
-    backgroundColor: Colors.ember,
+    backgroundColor: Colors.text,
   },
   actionConnected: {
     backgroundColor: Colors.surfaceRaised,
   },
   actionText: {
     fontWeight: 800,
+    color: Colors.ink,
+  },
+  actionTextConnected: {
     color: Colors.text,
   },
   pressed: {
