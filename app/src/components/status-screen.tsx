@@ -2,7 +2,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { Button, type ButtonProps } from '@/components/ui/button';
 import { Dots } from '@/components/ui/dots';
-import { Sparky } from '@/components/ui/sparky';
+import { SparkMark } from '@/components/ui/spark-mark';
 import { AppText } from '@/components/ui/text';
 import { Colors, Spacing, Tones } from '@/constants/theme';
 
@@ -18,7 +18,12 @@ export function StatusScreen({ title, message, actions = [] }: StatusScreenProps
     <View style={styles.screen}>
       {title ? (
         <>
-          <Sparky size={52} sleepy />
+          <SparkMark
+            size={72}
+            ink={Colors.textMuted}
+            gold={Colors.textMuted}
+            ash={Colors.surfaceRaised}
+          />
           <AppText variant="title" style={styles.center}>
             {title}
           </AppText>

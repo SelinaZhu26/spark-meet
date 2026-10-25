@@ -1,17 +1,22 @@
 import { StyleSheet, View } from 'react-native';
 
-import { Sparky } from '@/components/ui/sparky';
+import { SparkMark } from '@/components/ui/spark-mark';
 import { AppText } from '@/components/ui/text';
 import { Colors, Fonts } from '@/constants/theme';
 
-/** The mascot and the wordmark. `dark` is for the light screens. */
+/** The sparkler and the wordmark. `dark` is for the light screens. */
 export function Logo({ size = 26, dark = false }: { size?: number; dark?: boolean }) {
   return (
     <View
       accessibilityRole="header"
       accessibilityLabel="Spark"
-      style={[styles.row, { gap: size * 0.28 }]}>
-      <Sparky size={size * 0.82} />
+      style={[styles.row, { gap: size * 0.18 }]}>
+      <SparkMark
+        size={size * 1.3}
+        ink={dark ? Colors.ink : Colors.text}
+        gold={Colors.yellow}
+        ash={dark ? Colors.textMuted : Colors.textSecondary}
+      />
       <AppText
         style={{
           fontFamily: Fonts.semiBoldItalic,

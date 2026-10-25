@@ -11,7 +11,7 @@ import { Card } from '@/components/ui/card';
 import { Dots } from '@/components/ui/dots';
 import { rise } from '@/components/ui/rise';
 import { Segmented } from '@/components/ui/segmented';
-import { Sparky } from '@/components/ui/sparky';
+import { SparkMark } from '@/components/ui/spark-mark';
 import { AppText } from '@/components/ui/text';
 import { Colors, Spacing, Tones } from '@/constants/theme';
 import { api, errorMessage } from '@/lib/api';
@@ -108,7 +108,12 @@ export default function Sparks() {
           </View>
         ) : all.length === 0 ? (
           <Animated.View entering={rise(1)} style={styles.empty}>
-            <Sparky size={56} sleepy />
+            <SparkMark
+              size={80}
+              ink={Colors.textMuted}
+              gold={Colors.textMuted}
+              ash={Colors.surfaceRaised}
+            />
             <AppText variant="heading">no sparks yet</AppText>
             {!profile.active && (
               <Button title="turn on spark" onPress={() => router.navigate('/')} />
