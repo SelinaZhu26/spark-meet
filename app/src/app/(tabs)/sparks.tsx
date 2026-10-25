@@ -9,7 +9,6 @@ import { useTabBarSpace } from '@/components/tab-bar';
 import { Button } from '@/components/ui/button';
 import { Dots } from '@/components/ui/dots';
 import { rise } from '@/components/ui/rise';
-import { Segmented } from '@/components/ui/segmented';
 import { SparkMark } from '@/components/ui/spark-mark';
 import { AppText } from '@/components/ui/text';
 import { Spacing, Springs } from '@/constants/theme';
@@ -17,14 +16,6 @@ import { api, errorMessage } from '@/lib/api';
 import { themedStyles, useAppearance } from '@/lib/appearance';
 import { useMe } from '@/lib/session';
 import type { Spark } from '@/lib/types';
-
-const FILTERS = [
-  { value: 'friends', label: 'friends', test: (spark: Spark) => spark.mode === 'friends' },
-  { value: 'dating', label: 'dating', test: (spark: Spark) => spark.mode === 'dating' },
-  { value: 'mutual', label: 'mutual', test: (spark: Spark) => spark.connected },
-] as const;
-
-type Filter = 'all' | (typeof FILTERS)[number]['value'];
 
 export default function Sparks() {
   const { colors, marks } = useAppearance();
@@ -35,7 +26,6 @@ export default function Sparks() {
   const [sparks, setSparks] = useState<Spark[] | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [filter, setFilter] = useState<Filter>('all');
 
   const load = useCallback(async () => {
     try {
@@ -59,14 +49,6 @@ export default function Sparks() {
   };
 
   const all = sparks ?? [];
-  // Only offer filters that would actually narrow the list.
-  const filters = FILTERS.filter(({ test }) => {
-    const count = all.filter(test).length;
-    return count > 0 && count < all.length;
-  });
-  const selected = filters.find(({ value }) => value === filter);
-  const shown = selected ? all.filter(selected.test) : all;
-
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
       <ScrollView
@@ -86,16 +68,6 @@ export default function Sparks() {
             {sparks === null || all.length === 0 ? ' ' : `${all.length} so far`}
           </AppText>
         </Animated.View>
-
-        {filters.length > 0 && (
-          <Animated.View entering={rise(1)}>
-            <Segmented
-              options={[{ value: 'all', label: 'all' }, ...filters]}
-              value={selected ? filter : 'all'}
-              onChange={setFilter}
-            />
-          </Animated.View>
-        )}
 
         {error && <AppText tone="danger">{error}</AppText>}
 
@@ -120,7 +92,7 @@ export default function Sparks() {
           </Animated.View>
         ) : (
           <Animated.View entering={rise(2)}>
-            {shown.map((spark, index) => (
+            {all.map((spark, index) => (
               <Animated.View
                 key={spark.id}
                 layout={LinearTransition.springify(Springs.slide.duration).dampingRatio(

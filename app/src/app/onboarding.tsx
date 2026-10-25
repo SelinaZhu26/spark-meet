@@ -14,11 +14,9 @@ import { Logo } from '@/components/logo';
 import { Sparkler } from '@/components/sparkler';
 import { Button } from '@/components/ui/button';
 import { Chip } from '@/components/ui/chip';
-import { Icon, type IconName } from '@/components/ui/icon';
 import { IconButton } from '@/components/ui/icon-button';
-import { PressableScale } from '@/components/ui/pressable-scale';
 import { AppText } from '@/components/ui/text';
-import { Fonts, Radius, Spacing, Springs, alpha } from '@/constants/theme';
+import { Fonts, Radius, Spacing, Springs } from '@/constants/theme';
 import { api, errorMessage } from '@/lib/api';
 import { themedStyles, useColors } from '@/lib/appearance';
 import {
@@ -30,7 +28,7 @@ import {
 } from '@/lib/interests';
 import { useMe, useSession } from '@/lib/session';
 
-const STEPS = 4;
+const STEPS = 3;
 const MIN_INTERESTS = 3;
 
 export default function Onboarding() {
@@ -41,18 +39,11 @@ export default function Onboarding() {
   const [forward, setForward] = useState(true);
   const [displayName, setDisplayName] = useState(profile.display_name);
   const [interests, setInterests] = useState(profile.interests);
-  const [friends, setFriends] = useState(profile.friends_enabled);
-  const [dating, setDating] = useState(profile.dating_enabled);
   const [bio, setBio] = useState(profile.bio);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const ready = [
-    displayName.trim() !== '',
-    interests.length >= MIN_INTERESTS,
-    friends || dating,
-    true,
-  ][step];
+  const ready = [displayName.trim() !== '', interests.length >= MIN_INTERESTS, true][step];
   const last = step === STEPS - 1;
 
   const go = (next: number) => {
@@ -70,8 +61,9 @@ export default function Onboarding() {
           bio,
           avatar_url: profile.avatar_url,
           interests,
-          friends_enabled: friends,
-          dating_enabled: dating,
+          // One pool: everyone is matched as friends.
+          friends_enabled: true,
+          dating_enabled: false,
         })
       );
     } catch (err) {
@@ -118,15 +110,7 @@ export default function Onboarding() {
             />
           )}
           {step === 1 && <InterestsStep interests={interests} onChange={setInterests} />}
-          {step === 2 && (
-            <PoolsStep
-              friends={friends}
-              dating={dating}
-              onFriends={setFriends}
-              onDating={setDating}
-            />
-          )}
-          {step === 3 && <BioStep value={bio} onChange={setBio} />}
+          {step === 2 && <BioStep value={bio} onChange={setBio} />}
         </Animated.View>
 
         <View style={styles.footer}>
@@ -262,67 +246,6 @@ function InterestsStep({
   );
 }
 
-type PoolsStepProps = {
-  friends: boolean;
-  dating: boolean;
-  onFriends: (value: boolean) => void;
-  onDating: (value: boolean) => void;
-};
-
-function PoolsStep({ friends, dating, onFriends, onDating }: PoolsStepProps) {
-  const styles = useStyles();
-  return (
-    <View style={styles.bottomStep}>
-      <AppText variant="hero">who are you looking for?</AppText>
-      <View style={styles.options}>
-        <Option
-          icon="friends"
-          label="friends"
-          selected={friends}
-          onPress={() => onFriends(!friends)}
-        />
-        <Option icon="dating" label="dating" selected={dating} onPress={() => onDating(!dating)} />
-      </View>
-    </View>
-  );
-}
-
-function Option({
-  icon,
-  label,
-  selected,
-  onPress,
-}: {
-  icon: IconName;
-  label: string;
-  selected: boolean;
-  onPress: () => void;
-}) {
-  const colors = useColors();
-  const styles = useStyles();
-  return (
-    <PressableScale
-      accessibilityRole="checkbox"
-      accessibilityState={{ checked: selected }}
-      onPress={onPress}
-      pressedScale={0.98}
-      style={[
-        styles.option,
-        selected ? styles.optionOn : styles.optionOff,
-        { transitionProperty: ['borderColor', 'backgroundColor'], transitionDuration: 220 },
-      ]}>
-      <Icon name={icon} size={22} color={selected ? colors.accent : colors.textMuted} />
-      <AppText
-        style={[styles.optionLabel, { color: selected ? colors.text : colors.textSecondary }]}>
-        {label}
-      </AppText>
-      <View style={[styles.check, selected ? styles.checkOn : styles.checkOff]}>
-        {selected && <Icon name="check" size={16} color={colors.ink} />}
-      </View>
-    </PressableScale>
-  );
-}
-
 function BioStep({ value, onChange }: { value: string; onChange: (value: string) => void }) {
   const colors = useColors();
   const styles = useStyles();
@@ -419,45 +342,6 @@ const useStyles = themedStyles((colors) => ({
     paddingHorizontal: Spacing.three - 2,
     paddingTop: Spacing.three - 4,
     textAlignVertical: 'top',
-  },
-  options: {
-    gap: Spacing.three - 6,
-  },
-  option: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingHorizontal: Spacing.three + 2,
-    paddingVertical: Spacing.three + 2,
-    borderRadius: Radius.medium,
-    borderWidth: 1,
-  },
-  optionOn: {
-    borderColor: colors.gold,
-    backgroundColor: alpha(colors.gold, 0.06),
-  },
-  optionOff: {
-    borderColor: colors.line,
-  },
-  optionLabel: {
-    flex: 1,
-    fontFamily: Fonts.italic,
-    fontSize: 24,
-    lineHeight: 28,
-  },
-  check: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkOn: {
-    backgroundColor: colors.gold,
-  },
-  checkOff: {
-    borderWidth: 1.5,
-    borderColor: colors.lineStrong,
   },
   footer: {
     gap: Spacing.three - 4,

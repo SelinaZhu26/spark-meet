@@ -111,7 +111,7 @@ function Details({ spark, waving, onWave }: { spark: Spark; waving: boolean; onW
           <AppText style={styles.scoreUnit}>%</AppText>
         </View>
         <AppText variant="label" tone="secondary">
-          {spark.mode} match
+          match
         </AppText>
       </Animated.View>
 

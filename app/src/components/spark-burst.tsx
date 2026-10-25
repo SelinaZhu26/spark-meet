@@ -9,10 +9,9 @@ import Animated, {
   withRepeat,
   withSequence,
   withTiming,
+  type SharedValue,
 } from 'react-native-reanimated';
 import Svg, { Defs, LinearGradient, Path, Stop } from 'react-native-svg';
-
-import { Speck } from '@/components/sparkler';
 
 import { seedOf } from '@/lib/seed';
 import { useAppearance } from '@/lib/appearance';
@@ -228,6 +227,93 @@ export function SparkBurst({ width, height, hub, core, seed }: SparkBurstProps) 
   );
 }
 
+export type SpeckProps = {
+  /** Where it starts from. */
+  x: number;
+  y: number;
+  /** Degrees, clockwise from 3 o'clock. */
+  angle: number;
+  /** How far from the origin it appears, and how far it then flies. */
+  start: number;
+  distance: number;
+  /** How far it drops by the time it burns out. */
+  fall: number;
+  length: number;
+  thickness: number;
+  duration: number;
+  delay: number;
+  color: string;
+  /** Fades every speck together, e.g. while the burst grows in. */
+  heat: SharedValue<number>;
+  on: boolean;
+};
+
+/** A short dash that shoots out from a point, falls a little and burns out, over and over. */
+function Speck({
+  x,
+  y,
+  angle,
+  start,
+  distance,
+  fall,
+  length,
+  thickness,
+  duration,
+  delay,
+  color,
+  heat,
+  on,
+}: SpeckProps) {
+  const progress = useSharedValue(0);
+  const radians = (angle * Math.PI) / 180;
+
+  useEffect(() => {
+    if (!on) {
+      cancelAnimation(progress);
+      progress.set(0);
+      return;
+    }
+    progress.set(
+      withDelay(
+        delay,
+        withRepeat(withTiming(1, { duration, easing: Easing.out(Easing.quad) }), -1, false)
+      )
+    );
+    return () => cancelAnimation(progress);
+  }, [on, delay, duration, progress]);
+
+  const style = useAnimatedStyle(() => {
+    const p = progress.get();
+    const r = start + p * distance;
+    return {
+      opacity: on ? heat.get() * (p < 0.12 ? p / 0.12 : 1 - (p - 0.12) / 0.88) : 0,
+      transform: [
+        { translateX: Math.cos(radians) * r },
+        { translateY: Math.sin(radians) * r + p * p * fall },
+        { rotate: `${angle}deg` },
+        { scaleX: 1 - p * 0.6 },
+      ],
+    };
+  });
+
+  return (
+    <Animated.View
+      style={[
+        styles.speck,
+        {
+          left: x - length / 2,
+          top: y - thickness / 2,
+          width: length,
+          height: thickness,
+          borderRadius: thickness / 2,
+          backgroundColor: color,
+        },
+        style,
+      ]}
+    />
+  );
+}
+
 const styles = StyleSheet.create({
   burst: {
     position: 'absolute',
@@ -237,5 +323,8 @@ const styles = StyleSheet.create({
     left: 0,
     pointerEvents: 'none',
     overflow: 'hidden',
+  },
+  speck: {
+    position: 'absolute',
   },
 });

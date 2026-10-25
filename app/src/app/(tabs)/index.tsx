@@ -11,29 +11,21 @@ import { VIEW } from '@/components/ui/spark-mark';
 import { AppText } from '@/components/ui/text';
 import { Fonts, Spacing, tracking } from '@/constants/theme';
 import { themedStyles } from '@/lib/appearance';
-import { useMe } from '@/lib/session';
 import { useSparkSwitch } from '@/lib/spark-switch';
 
 export default function Home() {
   const styles = useStyles();
-  const { profile } = useMe();
   const { active, busy, mode, error, toggle } = useSparkSwitch();
   const tabBarSpace = useTabBarSpace();
   // The sparkler fills whatever room is left between the top bar and the switch.
   const [scene, setScene] = useState({ width: 0, height: 0 });
   const size = Math.min(scene.height, (scene.width * VIEW.height) / VIEW.width);
-  const pools = [profile.friends_enabled && 'friends', profile.dating_enabled && 'dating']
-    .filter(Boolean)
-    .join(' & ');
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
       <ScrollView contentContainerStyle={[styles.content, { paddingBottom: tabBarSpace }]}>
         <Animated.View entering={rise(0)} style={styles.topbar}>
           <AppText style={styles.wordmark}>spark</AppText>
-          <AppText variant="label" tone="muted" numberOfLines={1}>
-            {pools}
-          </AppText>
         </Animated.View>
 
         <View

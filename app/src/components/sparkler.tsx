@@ -2,254 +2,157 @@ import { useEffect } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, {
   Easing,
-  cancelAnimation,
-  useAnimatedStyle,
+  useAnimatedProps,
   useSharedValue,
-  withDelay,
-  withRepeat,
-  withSequence,
   withTiming,
   type SharedValue,
 } from 'react-native-reanimated';
+import Svg, { Path } from 'react-native-svg';
 
-import { HUB, SparkMark, VIEW, type Stroke } from '@/components/ui/spark-mark';
+import { HUB, STROKES, SparkMark, VIEW } from '@/components/ui/spark-mark';
 import { useAppearance } from '@/lib/appearance';
 
-const isBody = (stroke: Stroke) => stroke.tone === 'ink';
-const isGoldRay = (stroke: Stroke) => stroke.part === 'ray' && stroke.tone === 'gold';
-const isInner = (stroke: Stroke) => stroke.part === 'inner';
+const AnimatedPath = Animated.createAnimatedComponent(Path);
 
-/** Specks fly off the hub in every direction except down the stick. Angles are in degrees, clockwise from 3 o'clock. */
-const SPECKS = [
-  { angle: -150, reach: 0.3, duration: 1700, delay: 0, gold: true },
-  { angle: -62, reach: 0.34, duration: 2100, delay: 380, gold: true },
-  { angle: -18, reach: 0.27, duration: 1500, delay: 760, gold: false },
-  { angle: 168, reach: 0.31, duration: 1900, delay: 220, gold: true },
-  { angle: -104, reach: 0.36, duration: 2300, delay: 1050, gold: true },
-  { angle: 12, reach: 0.33, duration: 1800, delay: 560, gold: true },
-  { angle: 128, reach: 0.24, duration: 1600, delay: 1320, gold: false },
-  { angle: -128, reach: 0.25, duration: 1400, delay: 880, gold: true },
-  { angle: -36, reach: 0.38, duration: 2400, delay: 1500, gold: true },
-  { angle: 196, reach: 0.22, duration: 1500, delay: 1180, gold: true },
-] as const;
+/** How much of the fill the stick takes before color reaches the hub and spreads into the rays. */
+const STICK_SHARE = 0.45;
+/** How long a full fill takes, from dark to lit; going dark is quicker. */
+const LIGHT_MS = 1900;
+const DOUSE_MS = 1100;
 
-/** An irregular flicker: opacity multipliers and how long each takes to reach. */
-function flicker(steps: readonly (readonly [value: number, duration: number])[]) {
-  return withRepeat(
-    withSequence(...steps.map(([value, duration]) => withTiming(value, { duration }))),
-    -1
-  );
+const numbers = (d: string) => d.match(/-?\d+(\.\d+)?/g)!.map(Number);
+
+/** Arc length of a path made of an M and cubic C segments, so a dash can travel exactly along it. */
+function pathLength(d: string) {
+  const n = numbers(d);
+  let [x, y] = [n[0], n[1]];
+  let length = 0;
+  for (let i = 2; i + 5 < n.length; i += 6) {
+    const [x1, y1, x2, y2, x3, y3] = n.slice(i, i + 6);
+    let [px, py] = [x, y];
+    for (let step = 1; step <= 24; step++) {
+      const t = step / 24;
+      const u = 1 - t;
+      const qx = u * u * u * x + 3 * u * u * t * x1 + 3 * u * t * t * x2 + t * t * t * x3;
+      const qy = u * u * u * y + 3 * u * u * t * y1 + 3 * u * t * t * y2 + t * t * t * y3;
+      length += Math.hypot(qx - px, qy - py);
+      [px, py] = [qx, qy];
+    }
+    [x, y] = [x3, y3];
+  }
+  return length;
 }
+
+const fromHub = (x: number, y: number) => Math.hypot(x - HUB.x, y - HUB.y);
+
+/**
+ * Each stroke's length and the end its color starts from: the stick and its loop fill
+ * up toward the hub, and every other stroke spreads out from it.
+ */
+const FILLS = STROKES.map((stroke) => {
+  const n = numbers(stroke.d);
+  const start = fromHub(n[0], n[1]);
+  const end = fromHub(n[n.length - 2], n[n.length - 1]);
+  return {
+    stroke,
+    length: pathLength(stroke.d),
+    fromEnd: stroke.part === 'stick' ? end > start : end < start,
+    window: stroke.part === 'stick' ? ([0, STICK_SHARE] as const) : ([STICK_SHARE, 1] as const),
+  };
+});
 
 export type SparklerProps = {
   /** Height in points. */
   size: number;
-  /** 0 is a dim graphite sparkler, 1 is fully lit; in between lights it partway. */
+  /** 0 is a dim sketch, 1 is fully lit; in between lights it partway. */
   lit: number;
   style?: StyleProp<ViewStyle>;
 };
 
-/** The logo as an illustration that ignites: gold rays flicker and pulse, specks drift off the hub. */
+/**
+ * The logo as an illustration that lights up: color climbs the stick to the hub, then
+ * spreads out along every ray at once. Once lit it holds still.
+ */
 export function Sparkler({ size, lit, style }: SparklerProps) {
-  const { colors, marks } = useAppearance();
+  const { marks } = useAppearance();
   const width = (size * VIEW.width) / VIEW.height;
-  // The hub's offset from the center, to scale layers around it.
-  const hub = {
-    x: ((HUB.x - VIEW.x) / VIEW.width - 0.5) * width,
-    y: ((HUB.y - VIEW.y) / VIEW.height - 0.5) * size,
-  };
-  const burning = lit > 0;
-
-  const heat = useSharedValue(lit);
-  const rays = useSharedValue(1);
-  const inner = useSharedValue(1);
-  const pulse = useSharedValue(0);
+  const scale = size / VIEW.height;
+  const progress = useSharedValue(0);
 
   useEffect(() => {
-    heat.set(withTiming(lit, { duration: 800, easing: Easing.out(Easing.cubic) }));
-  }, [lit, heat]);
-
-  useEffect(() => {
-    if (!burning) {
-      cancelAnimation(rays);
-      cancelAnimation(inner);
-      cancelAnimation(pulse);
-      pulse.set(withTiming(0, { duration: 400 }));
-      return;
-    }
-    rays.set(
-      flicker([
-        [0.78, 140],
-        [1, 110],
-        [0.88, 220],
-        [1, 160],
-        [0.7, 120],
-        [0.96, 260],
-      ])
+    const current = progress.get();
+    progress.set(
+      withTiming(lit, {
+        duration: Math.abs(lit - current) * (lit > current ? LIGHT_MS : DOUSE_MS),
+        easing: Easing.inOut(Easing.quad),
+      })
     );
-    inner.set(
-      flicker([
-        [0.5, 90],
-        [1, 130],
-        [0.75, 170],
-        [0.95, 80],
-        [0.6, 210],
-        [1, 140],
-      ])
-    );
-    pulse.set(
-      withRepeat(withTiming(1, { duration: 1300, easing: Easing.inOut(Easing.sin) }), -1, true)
-    );
-    return () => {
-      cancelAnimation(rays);
-      cancelAnimation(inner);
-      cancelAnimation(pulse);
-    };
-  }, [burning, rays, inner, pulse]);
+  }, [lit, progress]);
 
-  const around = (scale: number) => {
-    'worklet';
-    return [
-      { translateX: hub.x },
-      { translateY: hub.y },
-      { scale },
-      { translateX: -hub.x },
-      { translateY: -hub.y },
-    ];
-  };
-
-  const unlitStyle = useAnimatedStyle(() => ({ opacity: 1 - heat.get() }));
-  const bodyStyle = useAnimatedStyle(() => ({ opacity: heat.get() }));
-  const raysStyle = useAnimatedStyle(() => ({
-    opacity: heat.get() * rays.get(),
-    transform: around(0.86 + heat.get() * 0.14 + pulse.get() * 0.035),
-  }));
-  const innerStyle = useAnimatedStyle(() => ({
-    opacity: heat.get() * inner.get(),
-    transform: around(0.7 + heat.get() * 0.3 + pulse.get() * 0.06),
-  }));
-
-  const mark = { size, ...marks.lit };
   return (
     <View style={[styles.box, { width, height: size }, style]}>
-      <Animated.View style={[StyleSheet.absoluteFill, unlitStyle]}>
+      <View style={StyleSheet.absoluteFill}>
         <SparkMark size={size} {...marks.unlit} />
-      </Animated.View>
-      <Animated.View style={[StyleSheet.absoluteFill, bodyStyle]}>
-        <SparkMark {...mark} show={isBody} />
-      </Animated.View>
-      <Animated.View style={[StyleSheet.absoluteFill, raysStyle]}>
-        <SparkMark {...mark} show={isGoldRay} />
-      </Animated.View>
-      <Animated.View style={[StyleSheet.absoluteFill, innerStyle]}>
-        <SparkMark {...mark} show={isInner} />
-      </Animated.View>
-      {SPECKS.map((speck, index) => (
-        <Speck
-          key={index}
-          x={width / 2 + hub.x}
-          y={size / 2 + hub.y}
-          angle={speck.angle}
-          start={size * 0.05}
-          distance={size * speck.reach}
-          fall={size * 0.06}
-          length={Math.max(4, size * 0.02)}
-          thickness={Math.max(1.5, size * 0.0065)}
-          duration={speck.duration}
-          delay={speck.delay}
-          color={speck.gold ? colors.gold : colors.text}
-          heat={heat}
-          // A partly lit sparkler throws fewer specks.
-          on={index < Math.round(lit * SPECKS.length)}
-        />
-      ))}
+      </View>
+      <Svg
+        style={StyleSheet.absoluteFill}
+        width={width}
+        height={size}
+        viewBox={`${VIEW.x} ${VIEW.y} ${VIEW.width} ${VIEW.height}`}>
+        {FILLS.map(({ stroke, length, fromEnd, window }, index) => (
+          <Fill
+            key={index}
+            d={stroke.d}
+            length={length}
+            fromEnd={fromEnd}
+            window={window}
+            color={stroke.part === 'stick' ? marks.lit.stick : marks.lit[stroke.tone]}
+            width={Math.max(stroke.width, (stroke.width > 20 ? 1.6 : 1.1) / scale)}
+            progress={progress}
+          />
+        ))}
+      </Svg>
     </View>
   );
 }
 
-export type SpeckProps = {
-  /** Where it starts from. */
-  x: number;
-  y: number;
-  /** Degrees, clockwise from 3 o'clock. */
-  angle: number;
-  /** How far from the origin it appears, and how far it then flies. */
-  start: number;
-  distance: number;
-  /** How far it drops by the time it burns out. */
-  fall: number;
+type FillProps = {
+  d: string;
   length: number;
-  thickness: number;
-  duration: number;
-  delay: number;
+  /** Starts from the path's last point instead of its first. */
+  fromEnd: boolean;
+  /** The part of the overall progress this stroke fills during. */
+  window: readonly [from: number, to: number];
   color: string;
-  /** Fades every speck together, e.g. while the sparkler lights up. */
-  heat: SharedValue<number>;
-  on: boolean;
+  width: number;
+  progress: SharedValue<number>;
 };
 
-/** A short dash that shoots out from a point, falls a little and burns out, over and over. */
-export function Speck({
-  x,
-  y,
-  angle,
-  start,
-  distance,
-  fall,
-  length,
-  thickness,
-  duration,
-  delay,
-  color,
-  heat,
-  on,
-}: SpeckProps) {
-  const progress = useSharedValue(0);
-  const radians = (angle * Math.PI) / 180;
-
-  useEffect(() => {
-    if (!on) {
-      cancelAnimation(progress);
-      progress.set(0);
-      return;
-    }
-    progress.set(
-      withDelay(
-        delay,
-        withRepeat(withTiming(1, { duration, easing: Easing.out(Easing.quad) }), -1, false)
-      )
-    );
-    return () => cancelAnimation(progress);
-  }, [on, delay, duration, progress]);
-
-  const style = useAnimatedStyle(() => {
-    const p = progress.get();
-    const r = start + p * distance;
+/** One stroke in color, revealed along its own curve by sliding a single dash over it. */
+function Fill({ d, length, fromEnd, window, color, width, progress }: FillProps) {
+  // A touch longer than the path, so a full dash covers it with no seam.
+  const dash = length + 2;
+  const animatedProps = useAnimatedProps(() => {
+    const [from, to] = window;
+    const t = Math.min(1, Math.max(0, (progress.get() - from) / (to - from)));
+    const hidden = dash * (1 - t);
     return {
-      opacity: on ? heat.get() * (p < 0.12 ? p / 0.12 : 1 - (p - 0.12) / 0.88) : 0,
-      transform: [
-        { translateX: Math.cos(radians) * r },
-        { translateY: Math.sin(radians) * r + p * p * fall },
-        { rotate: `${angle}deg` },
-        { scaleX: 1 - p * 0.6 },
-      ],
+      strokeDashoffset: fromEnd ? -hidden : hidden,
+      // A zero-length dash would still draw its round cap as a dot.
+      strokeOpacity: t > 0 ? 1 : 0,
     };
   });
 
   return (
-    <Animated.View
-      style={[
-        styles.speck,
-        {
-          left: x - length / 2,
-          top: y - thickness / 2,
-          width: length,
-          height: thickness,
-          borderRadius: thickness / 2,
-          backgroundColor: color,
-        },
-        style,
-      ]}
+    <AnimatedPath
+      d={d}
+      fill="none"
+      stroke={color}
+      strokeWidth={width}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeDasharray={[dash, dash]}
+      animatedProps={animatedProps}
     />
   );
 }
@@ -257,8 +160,5 @@ export function Speck({
 const styles = StyleSheet.create({
   box: {
     pointerEvents: 'none',
-  },
-  speck: {
-    position: 'absolute',
   },
 });

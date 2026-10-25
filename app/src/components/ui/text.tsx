@@ -1,4 +1,4 @@
-import { StyleSheet, Text, type TextProps } from 'react-native';
+import { Platform, StyleSheet, Text, type TextProps } from 'react-native';
 
 import { Fonts, tracking, type Palette } from '@/constants/theme';
 import { useColors } from '@/lib/appearance';
@@ -8,16 +8,35 @@ export type AppTextProps = TextProps & {
   tone?: 'default' | 'secondary' | 'muted' | 'accent' | 'danger' | 'ink';
 };
 
-export function AppText({ style, variant = 'body', tone = 'default', ...rest }: AppTextProps) {
+export function AppText({
+  style,
+  variant = 'body',
+  tone = 'default',
+  children,
+  ...rest
+}: AppTextProps) {
   const colors = useColors();
   return (
     <Text
       // Android's default "highQuality" breaking can measure a line narrower than it draws.
       textBreakStrategy="simple"
       style={[styles[variant], { color: colors[tones[tone]] }, style]}
-      {...rest}
-    />
+      {...rest}>
+      {withSlack(children)}
+    </Text>
   );
+}
+
+/**
+ * Android can lay out text that's sized to fit itself a pixel narrower than it measured,
+ * wrapping the last letter or word onto a line nobody sees ("sav" for "save"). A trailing
+ * space gives it that room: trailing spaces never force a wrap, they just hang.
+ */
+function withSlack(children: TextProps['children']) {
+  if (Platform.OS !== 'android' || children === null || children === undefined) {
+    return children;
+  }
+  return Array.isArray(children) ? [...children, ' '] : [children, ' '];
 }
 
 const tones = {

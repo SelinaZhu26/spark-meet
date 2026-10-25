@@ -31,8 +31,6 @@ export function ProfileForm({ initial, submitLabel, onSaved }: ProfileFormProps)
   const [bio, setBio] = useState(initial.bio);
   const [interests, setInterests] = useState(initial.interests);
   const [custom, setCustom] = useState('');
-  const [friends, setFriends] = useState(initial.friends_enabled);
-  const [dating, setDating] = useState(initial.dating_enabled);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -56,8 +54,9 @@ export function ProfileForm({ initial, submitLabel, onSaved }: ProfileFormProps)
           bio,
           avatar_url: initial.avatar_url,
           interests,
-          friends_enabled: friends,
-          dating_enabled: dating,
+          // One pool: everyone is matched as friends.
+          friends_enabled: true,
+          dating_enabled: false,
         })
       );
     } catch (err) {
@@ -125,23 +124,9 @@ export function ProfileForm({ initial, submitLabel, onSaved }: ProfileFormProps)
         </Field>
       </Card>
 
-      <Card>
-        <Field label="looking for">
-          <View style={styles.chips}>
-            <Chip label="friends" selected={friends} onPress={() => setFriends(!friends)} />
-            <Chip label="dating" selected={dating} onPress={() => setDating(!dating)} />
-          </View>
-        </Field>
-      </Card>
-
       {error && <AppText tone="danger">{error}</AppText>}
 
-      <Button
-        title={submitLabel}
-        onPress={save}
-        loading={saving}
-        disabled={!displayName.trim() || (!friends && !dating)}
-      />
+      <Button title={submitLabel} onPress={save} loading={saving} disabled={!displayName.trim()} />
     </View>
   );
 }

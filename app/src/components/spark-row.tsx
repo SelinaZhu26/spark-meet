@@ -38,9 +38,6 @@ export function SparkRow({ spark }: { spark: Spark }) {
             <AppText variant="caption" tone={fresh ? 'accent' : 'muted'}>
               {status}
             </AppText>
-            <AppText variant="caption" tone="muted">
-              · {spark.mode}
-            </AppText>
           </View>
         </View>
         <View style={styles.score}>

@@ -74,7 +74,7 @@ function Burst({
           <AppText style={styles.percent}>%</AppText>
         </View>
         <AppText variant="title" style={styles.match}>
-          {spark.mode} match
+          match
         </AppText>
       </Animated.View>
 
