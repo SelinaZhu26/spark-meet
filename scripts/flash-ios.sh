@@ -16,4 +16,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/../app"
 
+# Local build: never talk to Expo's servers (no Expo account needed).
+export EXPO_OFFLINE=1
+
 npx expo run:ios --device --configuration Release "$@"
