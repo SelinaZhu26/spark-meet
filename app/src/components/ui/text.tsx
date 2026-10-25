@@ -1,6 +1,6 @@
 import { StyleSheet, Text, type TextProps } from 'react-native';
 
-import { Fonts, type Palette } from '@/constants/theme';
+import { Fonts, tracking, type Palette } from '@/constants/theme';
 import { useColors } from '@/lib/appearance';
 
 export type AppTextProps = TextProps & {
@@ -10,7 +10,14 @@ export type AppTextProps = TextProps & {
 
 export function AppText({ style, variant = 'body', tone = 'default', ...rest }: AppTextProps) {
   const colors = useColors();
-  return <Text style={[styles[variant], { color: colors[tones[tone]] }, style]} {...rest} />;
+  return (
+    <Text
+      // Android's default "highQuality" breaking can measure a line narrower than it draws.
+      textBreakStrategy="simple"
+      style={[styles[variant], { color: colors[tones[tone]] }, style]}
+      {...rest}
+    />
+  );
 }
 
 const tones = {
@@ -27,19 +34,19 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.lightItalic,
     fontSize: 54,
     lineHeight: 56,
-    letterSpacing: -1.2,
+    letterSpacing: tracking(-1.2),
   },
   title: {
     fontFamily: Fonts.lightItalic,
     fontSize: 36,
     lineHeight: 40,
-    letterSpacing: -0.6,
+    letterSpacing: tracking(-0.6),
   },
   heading: {
     fontFamily: Fonts.semiBold,
     fontSize: 22,
     lineHeight: 26,
-    letterSpacing: -0.2,
+    letterSpacing: tracking(-0.2),
   },
   body: {
     fontFamily: Fonts.regular,

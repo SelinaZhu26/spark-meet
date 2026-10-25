@@ -15,7 +15,7 @@ import { Icon } from '@/components/ui/icon';
 import { IconButton } from '@/components/ui/icon-button';
 import { rise } from '@/components/ui/rise';
 import { AppText } from '@/components/ui/text';
-import { Fonts, Radius, Spacing, Springs } from '@/constants/theme';
+import { Fonts, Radius, Spacing, Springs, tracking } from '@/constants/theme';
 import { api, errorMessage } from '@/lib/api';
 import { themedStyles, useColors } from '@/lib/appearance';
 import type { Spark } from '@/lib/types';
@@ -222,7 +222,7 @@ const useStyles = themedStyles((colors) => ({
     fontFamily: Fonts.thinItalic,
     fontSize: 112,
     lineHeight: 112,
-    letterSpacing: -4,
+    letterSpacing: tracking(-4),
   },
   scoreUnit: {
     fontFamily: Fonts.lightItalic,

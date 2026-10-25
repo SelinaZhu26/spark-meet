@@ -4,6 +4,8 @@
  * scheme puts the same sparkler on white. Nothing casts a shadow or glows.
  */
 
+import { Platform } from 'react-native';
+
 export type ColorScheme = 'dark' | 'light';
 
 /** The logo's own gold and charcoal, the same in both schemes. */
@@ -103,6 +105,14 @@ export const Springs = {
   pop: { duration: 520, dampingRatio: 0.6 },
   slide: { duration: 420, dampingRatio: 0.9 },
 } as const;
+
+/**
+ * Tight letter spacing for big type. Android measures text without it and then wraps the
+ * overflow onto a line nobody made room for, so the last word vanishes; it gets none.
+ */
+export function tracking(value: number) {
+  return Platform.OS === 'android' ? 0 : value;
+}
 
 /** `#RRGGBB` plus an opacity, as `#RRGGBBAA`. */
 export function alpha(hex: string, opacity: number) {

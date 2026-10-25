@@ -5,7 +5,7 @@ import { Avatar } from '@/components/ui/avatar';
 import { PressableScale } from '@/components/ui/pressable-scale';
 import { SparkMark } from '@/components/ui/spark-mark';
 import { AppText } from '@/components/ui/text';
-import { Fonts, Spacing } from '@/constants/theme';
+import { Fonts, Spacing, tracking } from '@/constants/theme';
 import { themedStyles, useAppearance } from '@/lib/appearance';
 import type { Spark } from '@/lib/types';
 
@@ -92,7 +92,7 @@ const useStyles = themedStyles((colors) => ({
     fontFamily: Fonts.lightItalic,
     fontSize: 36,
     lineHeight: 40,
-    letterSpacing: -1,
+    letterSpacing: tracking(-1),
   },
   scoreUnit: {
     fontFamily: Fonts.italic,

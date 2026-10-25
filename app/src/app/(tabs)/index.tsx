@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { rise } from '@/components/ui/rise';
 import { VIEW } from '@/components/ui/spark-mark';
 import { AppText } from '@/components/ui/text';
-import { Fonts, Spacing } from '@/constants/theme';
+import { Fonts, Spacing, tracking } from '@/constants/theme';
 import { themedStyles } from '@/lib/appearance';
 import { useMe } from '@/lib/session';
 import { useSparkSwitch } from '@/lib/spark-switch';
@@ -50,7 +50,7 @@ export default function Home() {
         </View>
 
         <Animated.View key={active ? 'on' : 'off'} entering={rise(1)} style={styles.status}>
-          <AppText variant="hero" style={active ? undefined : styles.dim}>
+          <AppText variant="hero" style={[styles.center, !active && styles.dim]}>
             {active ? 'spark is lit' : 'spark is off'}
           </AppText>
           <AppText tone="secondary" style={styles.center}>
@@ -111,7 +111,7 @@ const useStyles = themedStyles((colors) => ({
     fontFamily: Fonts.semiBoldItalic,
     fontSize: 26,
     lineHeight: 30,
-    letterSpacing: -0.5,
+    letterSpacing: tracking(-0.5),
   },
   scene: {
     flexGrow: 1,
@@ -124,7 +124,7 @@ const useStyles = themedStyles((colors) => ({
     justifyContent: 'flex-end',
   },
   status: {
-    alignItems: 'center',
+    alignSelf: 'stretch',
     gap: Spacing.one,
   },
   dim: {

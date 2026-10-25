@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
 import { reveal } from '@/components/ui/rise';
 import { AppText } from '@/components/ui/text';
-import { Fonts, Spacing, alpha } from '@/constants/theme';
+import { Fonts, Spacing, alpha, tracking } from '@/constants/theme';
 import { themedStyles, useColors } from '@/lib/appearance';
 import { sparkTeaser } from '@/lib/notifications';
 import type { Spark } from '@/lib/types';
@@ -135,7 +135,7 @@ const useStyles = themedStyles((colors) => ({
     fontFamily: Fonts.thinItalic,
     fontSize: MEGA,
     lineHeight: MEGA * 1.08,
-    letterSpacing: -7,
+    letterSpacing: tracking(-7),
     color: colors.text,
   },
   percent: {
