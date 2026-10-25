@@ -48,7 +48,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 async fn connect(url: &str) -> sqlx::Result<PgPool> {
     PgPoolOptions::new()
-        .max_connections(10)
+        // Supabase's session pooler allows 15 clients per project; leave room for a
+        // second instance and psql.
+        .max_connections(5)
         .acquire_timeout(Duration::from_secs(10))
         .connect(url)
         .await
