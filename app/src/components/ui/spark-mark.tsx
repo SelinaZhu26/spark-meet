@@ -2,8 +2,8 @@ import Svg, { Path } from 'react-native-svg';
 
 /**
  * The brand's sparkler, traced from the hand-drawn logo in its 1920px drawing space.
- * `part` sorts strokes into the four long rays, the stick and its dangling loop, and
- * the short strokes around the hub.
+ * `part` sorts strokes into the four long rays, the stick, the petal-like loop dangling
+ * from the hub, and the short strokes around the hub.
  */
 export const STROKES = [
   {
@@ -32,7 +32,7 @@ export const STROKES = [
   },
   {
     tone: 'ink',
-    part: 'stick',
+    part: 'loop',
     width: 38,
     d: 'M1000 845 C995 853 976 874 968 892 C960 910 955 932 955 952 C955 972 957 990 966 1012 C975 1034 994 1059 1010 1082 C1026 1105 1049 1132 1060 1150 C1071 1168 1076 1178 1074 1192 C1072 1206 1062 1216 1048 1232 C1034 1248 1006 1270 990 1290 C974 1310 957 1330 950 1350 C943 1370 941 1394 946 1410 C951 1426 960 1439 982 1444 C1004 1449 1064 1442 1080 1442',
   },
@@ -116,7 +116,9 @@ export function SparkMark({
               key={index}
               d={stroke.d}
               fill="none"
-              stroke={stroke.part === 'stick' ? stick : colors[stroke.tone]}
+              stroke={
+                stroke.part === 'ray' || stroke.part === 'inner' ? colors[stroke.tone] : stick
+              }
               strokeWidth={Math.max(stroke.width, (stroke.width > 20 ? 1.6 : 1.1) / scale)}
               strokeLinecap="round"
               strokeLinejoin="round"

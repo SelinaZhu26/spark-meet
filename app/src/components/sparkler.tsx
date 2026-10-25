@@ -46,8 +46,8 @@ function pathLength(d: string) {
 const fromHub = (x: number, y: number) => Math.hypot(x - HUB.x, y - HUB.y);
 
 /**
- * Each stroke's length and the end its color starts from: the stick and its loop fill
- * up toward the hub, and every other stroke spreads out from it.
+ * Each stroke's length and the end its color starts from: the stick fills up toward the
+ * hub, and every other stroke, the dangling loop included, spreads out from it.
  */
 const FILLS = STROKES.map((stroke) => {
   const n = numbers(stroke.d);
@@ -71,7 +71,7 @@ export type SparklerProps = {
 
 /**
  * The logo as an illustration that lights up: color climbs the stick to the hub, then
- * spreads out along every ray at once. Once lit it holds still.
+ * spreads out along every ray and the loop at once. Once lit it holds still.
  */
 export function Sparkler({ size, lit, style }: SparklerProps) {
   const { marks } = useAppearance();
@@ -106,7 +106,11 @@ export function Sparkler({ size, lit, style }: SparklerProps) {
             length={length}
             fromEnd={fromEnd}
             window={window}
-            color={stroke.part === 'stick' ? marks.lit.stick : marks.lit[stroke.tone]}
+            color={
+              stroke.part === 'ray' || stroke.part === 'inner'
+                ? marks.lit[stroke.tone]
+                : marks.lit.stick
+            }
             width={Math.max(stroke.width, (stroke.width > 20 ? 1.6 : 1.1) / scale)}
             progress={progress}
           />
