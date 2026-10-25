@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { Modal, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { Modal, View, useWindowDimensions } from 'react-native';
 import Animated, { ZoomIn } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -8,7 +8,8 @@ import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
 import { reveal } from '@/components/ui/rise';
 import { AppText } from '@/components/ui/text';
-import { Colors, Fonts, Spacing, alpha } from '@/constants/theme';
+import { Fonts, Spacing, alpha } from '@/constants/theme';
+import { themedStyles, useColors } from '@/lib/appearance';
 import { sparkTeaser } from '@/lib/notifications';
 import type { Spark } from '@/lib/types';
 
@@ -44,6 +45,8 @@ function Burst({
   onOpen: (spark: Spark) => void;
   onDismiss: () => void;
 }) {
+  const colors = useColors();
+  const styles = useStyles();
   const { width, height } = useWindowDimensions();
   const hub = { x: width / 2, y: height * 0.4 };
 
@@ -52,7 +55,7 @@ function Burst({
       <SparkBurst width={width} height={height} hub={hub} core={MEGA * 0.62} seed={spark.id} />
       {/* The rays run out into the dark before the words and buttons at the bottom. */}
       <LinearGradient
-        colors={[alpha(Colors.night, 0), Colors.night]}
+        colors={[alpha(colors.night, 0), colors.night]}
         locations={[0, 0.6]}
         style={[styles.fade, { height: height * 0.4 }]}
       />
@@ -81,7 +84,7 @@ function Burst({
             icon="close"
             onPress={onDismiss}
             accessibilityLabel="Close"
-            color={Colors.night}
+            color={colors.night}
             size={38}
           />
         </View>
@@ -102,11 +105,11 @@ function Burst({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((colors) => ({
   slide: {
     flex: 1,
     overflow: 'hidden',
-    backgroundColor: Colors.night,
+    backgroundColor: colors.night,
   },
   fade: {
     position: 'absolute',
@@ -133,13 +136,13 @@ const styles = StyleSheet.create({
     fontSize: MEGA,
     lineHeight: MEGA * 1.08,
     letterSpacing: -7,
-    color: Colors.text,
+    color: colors.text,
   },
   percent: {
     fontFamily: Fonts.lightItalic,
     fontSize: 54,
     lineHeight: 84,
-    color: Colors.gold,
+    color: colors.accent,
   },
   inner: {
     flex: 1,
@@ -163,6 +166,6 @@ const styles = StyleSheet.create({
     gap: Spacing.three - 4,
   },
   later: {
-    backgroundColor: Colors.night,
+    backgroundColor: colors.night,
   },
-});
+}));

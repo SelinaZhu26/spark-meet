@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, StyleSheet, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, TextInput, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -7,11 +7,14 @@ import { Sparkler } from '@/components/sparkler';
 import { Button } from '@/components/ui/button';
 import { rise } from '@/components/ui/rise';
 import { AppText } from '@/components/ui/text';
-import { Colors, Fonts, Spacing } from '@/constants/theme';
+import { Fonts, Spacing } from '@/constants/theme';
 import { errorMessage } from '@/lib/api';
+import { themedStyles, useColors } from '@/lib/appearance';
 import { supabase } from '@/lib/supabase';
 
 export default function SignIn() {
+  const colors = useColors();
+  const styles = useStyles();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState<'sign-in' | 'sign-up' | null>(null);
@@ -54,7 +57,7 @@ export default function SignIn() {
               value={email}
               onChangeText={setEmail}
               placeholder="email"
-              placeholderTextColor={Colors.textMuted}
+              placeholderTextColor={colors.textMuted}
               autoCapitalize="none"
               autoCorrect={false}
               autoComplete="email"
@@ -65,7 +68,7 @@ export default function SignIn() {
               value={password}
               onChangeText={setPassword}
               placeholder="password"
-              placeholderTextColor={Colors.textMuted}
+              placeholderTextColor={colors.textMuted}
               secureTextEntry
               autoComplete="password"
               style={styles.input}
@@ -97,10 +100,10 @@ export default function SignIn() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((colors) => ({
   screen: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
   },
   content: {
     flex: 1,
@@ -119,7 +122,7 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.semiBoldItalic,
     fontSize: 22,
     lineHeight: 28,
-    color: Colors.gold,
+    color: colors.accent,
     marginBottom: Spacing.one,
   },
   form: {
@@ -128,8 +131,8 @@ const styles = StyleSheet.create({
   input: {
     height: 54,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.lineStrong,
-    color: Colors.text,
+    borderBottomColor: colors.lineStrong,
+    color: colors.text,
     fontFamily: Fonts.regular,
     fontSize: 20,
   },
@@ -140,4 +143,4 @@ const styles = StyleSheet.create({
   center: {
     textAlign: 'center',
   },
-});
+}));

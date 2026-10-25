@@ -1,7 +1,7 @@
 import * as Haptics from 'expo-haptics';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import Animated, { ZoomIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -15,14 +15,16 @@ import { Icon } from '@/components/ui/icon';
 import { IconButton } from '@/components/ui/icon-button';
 import { rise } from '@/components/ui/rise';
 import { AppText } from '@/components/ui/text';
-import { Colors, Fonts, Radius, Spacing, Springs } from '@/constants/theme';
+import { Fonts, Radius, Spacing, Springs } from '@/constants/theme';
 import { api, errorMessage } from '@/lib/api';
+import { themedStyles, useColors } from '@/lib/appearance';
 import type { Spark } from '@/lib/types';
 
 /** How often to check whether they waved back. */
 const WAVE_POLL_MS = 5_000;
 
 export default function SparkDetail() {
+  const styles = useStyles();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -96,6 +98,8 @@ export default function SparkDetail() {
 }
 
 function Details({ spark, waving, onWave }: { spark: Spark; waving: boolean; onWave: () => void }) {
+  const colors = useColors();
+  const styles = useStyles();
   const router = useRouter();
 
   return (
@@ -140,7 +144,7 @@ function Details({ spark, waving, onWave }: { spark: Spark; waving: boolean; onW
           <Animated.View
             entering={ZoomIn.springify(Springs.pop.duration).dampingRatio(Springs.pop.dampingRatio)}
             style={styles.waved}>
-            <Icon name="check" size={18} color={Colors.gold} />
+            <Icon name="check" size={18} color={colors.accent} />
             <AppText style={styles.wavedText}>waved · waiting for them</AppText>
           </Animated.View>
         ) : (
@@ -186,10 +190,10 @@ function Details({ spark, waving, onWave }: { spark: Spark; waving: boolean; onW
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((colors) => ({
   screen: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
   },
   content: {
     paddingHorizontal: Spacing.four - 4,
@@ -224,7 +228,7 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.lightItalic,
     fontSize: 40,
     lineHeight: 56,
-    color: Colors.gold,
+    color: colors.accent,
   },
   reason: {
     gap: Spacing.three,
@@ -250,7 +254,7 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
     borderRadius: Radius.pill,
     borderWidth: 1,
-    borderColor: Colors.lineStrong,
+    borderColor: colors.lineStrong,
   },
   wavedText: {
     fontFamily: Fonts.semiBoldItalic,
@@ -269,4 +273,4 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: Spacing.half,
   },
-});
+}));

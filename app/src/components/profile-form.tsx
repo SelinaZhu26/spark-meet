@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { StyleSheet, TextInput, View } from 'react-native';
+import { TextInput, View } from 'react-native';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Chip } from '@/components/ui/chip';
 import { AppText } from '@/components/ui/text';
-import { Colors, Fonts, Radius, Spacing } from '@/constants/theme';
+import { Fonts, Radius, Spacing } from '@/constants/theme';
 import { api, errorMessage } from '@/lib/api';
 import {
   MAX_INTERESTS,
@@ -16,6 +16,7 @@ import {
   toggleInterest,
 } from '@/lib/interests';
 import type { Me, ProfileInput } from '@/lib/types';
+import { themedStyles, useColors } from '@/lib/appearance';
 
 export type ProfileFormProps = {
   initial: ProfileInput;
@@ -24,6 +25,8 @@ export type ProfileFormProps = {
 };
 
 export function ProfileForm({ initial, submitLabel, onSaved }: ProfileFormProps) {
+  const colors = useColors();
+  const styles = useStyles();
   const [displayName, setDisplayName] = useState(initial.display_name);
   const [bio, setBio] = useState(initial.bio);
   const [interests, setInterests] = useState(initial.interests);
@@ -77,7 +80,7 @@ export function ProfileForm({ initial, submitLabel, onSaved }: ProfileFormProps)
             value={displayName}
             onChangeText={setDisplayName}
             placeholder="your name"
-            placeholderTextColor={Colors.textMuted}
+            placeholderTextColor={colors.textMuted}
             maxLength={40}
             autoComplete="given-name"
             style={styles.input}
@@ -88,7 +91,7 @@ export function ProfileForm({ initial, submitLabel, onSaved }: ProfileFormProps)
             value={bio}
             onChangeText={setBio}
             placeholder="learning to climb, obsessed with film photography, always down for ramen"
-            placeholderTextColor={Colors.textMuted}
+            placeholderTextColor={colors.textMuted}
             maxLength={300}
             multiline
             style={[styles.input, styles.multiline]}
@@ -113,7 +116,7 @@ export function ProfileForm({ initial, submitLabel, onSaved }: ProfileFormProps)
             onChangeText={setCustom}
             onSubmitEditing={addCustom}
             placeholder="add your own"
-            placeholderTextColor={Colors.textMuted}
+            placeholderTextColor={colors.textMuted}
             maxLength={40}
             returnKeyType="done"
             submitBehavior="submit"
@@ -152,6 +155,7 @@ function Field({
   aside?: string;
   children: React.ReactNode;
 }) {
+  const styles = useStyles();
   return (
     <View style={styles.field}>
       <View style={styles.fieldHeader}>
@@ -169,7 +173,7 @@ function Field({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((colors) => ({
   form: {
     gap: Spacing.three - 4,
   },
@@ -184,8 +188,8 @@ const styles = StyleSheet.create({
   input: {
     minHeight: 46,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.lineStrong,
-    color: Colors.text,
+    borderBottomColor: colors.lineStrong,
+    color: colors.text,
     fontFamily: Fonts.regular,
     fontSize: 19,
     paddingVertical: Spacing.two + 2,
@@ -193,7 +197,7 @@ const styles = StyleSheet.create({
   multiline: {
     minHeight: 104,
     borderWidth: 1,
-    borderColor: Colors.line,
+    borderColor: colors.line,
     borderRadius: Radius.small,
     paddingHorizontal: Spacing.three - 2,
     paddingTop: Spacing.three - 4,
@@ -204,4 +208,4 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: Spacing.two,
   },
-});
+}));

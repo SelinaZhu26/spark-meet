@@ -12,8 +12,9 @@ import { rise } from '@/components/ui/rise';
 import { Segmented } from '@/components/ui/segmented';
 import { SparkMark } from '@/components/ui/spark-mark';
 import { AppText } from '@/components/ui/text';
-import { Colors, MarkColors, Spacing, Springs } from '@/constants/theme';
+import { Spacing, Springs } from '@/constants/theme';
 import { api, errorMessage } from '@/lib/api';
+import { themedStyles, useAppearance } from '@/lib/appearance';
 import { useMe } from '@/lib/session';
 import type { Spark } from '@/lib/types';
 
@@ -26,6 +27,8 @@ const FILTERS = [
 type Filter = 'all' | (typeof FILTERS)[number]['value'];
 
 export default function Sparks() {
+  const { colors, marks } = useAppearance();
+  const styles = useStyles();
   const router = useRouter();
   const { profile } = useMe();
   const tabBarSpace = useTabBarSpace();
@@ -72,9 +75,9 @@ export default function Sparks() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={refresh}
-            tintColor={Colors.gold}
-            colors={[Colors.ink]}
-            progressBackgroundColor={Colors.gold}
+            tintColor={colors.gold}
+            colors={[colors.ink]}
+            progressBackgroundColor={colors.gold}
           />
         }>
         <Animated.View entering={rise(0)} style={styles.heading}>
@@ -98,11 +101,11 @@ export default function Sparks() {
 
         {sparks === null ? (
           <View style={styles.empty}>
-            <Dots color={Colors.gold} />
+            <Dots color={colors.gold} />
           </View>
         ) : all.length === 0 ? (
           <Animated.View entering={rise(1)} style={styles.empty}>
-            <SparkMark size={150} {...MarkColors.unlit} />
+            <SparkMark size={150} {...marks.unlit} />
             <AppText variant="title">no sparks yet</AppText>
             <AppText tone="secondary" style={styles.center}>
               {profile.active ? "we'll buzz you when one lands" : 'they land while spark is on'}
@@ -136,10 +139,10 @@ export default function Sparks() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((colors) => ({
   screen: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
   },
   content: {
     flexGrow: 1,
@@ -157,7 +160,7 @@ const styles = StyleSheet.create({
   },
   divider: {
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: Colors.line,
+    borderTopColor: colors.line,
   },
   empty: {
     flex: 1,
@@ -172,4 +175,4 @@ const styles = StyleSheet.create({
     minWidth: 200,
     marginTop: Spacing.four,
   },
-});
+}));

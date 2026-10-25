@@ -12,7 +12,7 @@ import {
   CrimsonPro_600SemiBold_Italic,
 } from '@expo-google-fonts/crimson-pro';
 import { useFonts } from 'expo-font';
-import { DarkTheme, Stack, ThemeProvider } from 'expo-router';
+import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
@@ -20,22 +20,11 @@ import { useEffect } from 'react';
 import { SparkRuntime } from '@/components/spark-runtime';
 import { StatusScreen } from '@/components/status-screen';
 import { iconFont } from '@/components/ui/icon';
-import { Colors, Fonts } from '@/constants/theme';
+import { Fonts } from '@/constants/theme';
+import { AppearanceProvider, useAppearance } from '@/lib/appearance';
 import { SessionProvider, useSession } from '@/lib/session';
 
 SplashScreen.preventAutoHideAsync();
-
-const theme = {
-  ...DarkTheme,
-  colors: {
-    ...DarkTheme.colors,
-    primary: Colors.gold,
-    background: Colors.background,
-    card: Colors.background,
-    text: Colors.text,
-    border: Colors.line,
-  },
-};
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
@@ -52,17 +41,42 @@ export default function RootLayout() {
   });
 
   return (
-    <SessionProvider>
-      <ThemeProvider value={theme}>
-        <StatusBar style="light" />
-        <RootNavigator fontsReady={fontsLoaded || !!fontError} />
-      </ThemeProvider>
-    </SessionProvider>
+    <AppearanceProvider>
+      <SessionProvider>
+        <Themed>
+          <RootNavigator fontsReady={fontsLoaded || !!fontError} />
+        </Themed>
+      </SessionProvider>
+    </AppearanceProvider>
+  );
+}
+
+/** Navigation chrome and the status bar follow the app's color scheme. */
+function Themed({ children }: { children: React.ReactNode }) {
+  const { scheme, colors } = useAppearance();
+  const base = scheme === 'dark' ? DarkTheme : DefaultTheme;
+  const theme = {
+    ...base,
+    colors: {
+      ...base.colors,
+      primary: colors.gold,
+      background: colors.background,
+      card: colors.background,
+      text: colors.text,
+      border: colors.line,
+    },
+  };
+  return (
+    <ThemeProvider value={theme}>
+      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
+      {children}
+    </ThemeProvider>
   );
 }
 
 function RootNavigator({ fontsReady }: { fontsReady: boolean }) {
   const { session, me, loading, error, refreshMe, signOut } = useSession();
+  const { colors } = useAppearance();
   const ready = !loading && fontsReady;
 
   useEffect(() => {
@@ -92,12 +106,12 @@ function RootNavigator({ fontsReady }: { fontsReady: boolean }) {
     <>
       <Stack
         screenOptions={{
-          headerStyle: { backgroundColor: Colors.background },
-          headerTintColor: Colors.text,
+          headerStyle: { backgroundColor: colors.background },
+          headerTintColor: colors.text,
           headerTitleStyle: { fontFamily: Fonts.semiBoldItalic, fontSize: 22 },
           headerShadowVisible: false,
           headerBackButtonDisplayMode: 'minimal',
-          contentStyle: { backgroundColor: Colors.background },
+          contentStyle: { backgroundColor: colors.background },
           animation: 'ios_from_right',
         }}>
         <Stack.Protected guard={!session}>

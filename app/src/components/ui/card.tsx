@@ -1,19 +1,21 @@
 import { StyleSheet, View, type ViewProps } from 'react-native';
 
-import { Colors, Radius, Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
+import { themedStyles } from '@/lib/appearance';
 
-/** A flat charcoal surface with a graphite hairline. */
+/** A flat surface with a hairline. */
 export function Card({ style, ...rest }: ViewProps) {
+  const styles = useStyles();
   return <View style={[styles.card, style]} {...rest} />;
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((colors) => ({
   card: {
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderRadius: Radius.medium,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: Colors.line,
+    borderColor: colors.line,
     padding: Spacing.three + 2,
     gap: Spacing.three,
   },
-});
+}));

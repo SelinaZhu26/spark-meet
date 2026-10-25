@@ -14,13 +14,16 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '@/components/ui/button';
 import { PressableScale } from '@/components/ui/pressable-scale';
 import { AppText } from '@/components/ui/text';
-import { Colors, Fonts, Radius, Spacing } from '@/constants/theme';
+import { Fonts, Radius, Spacing } from '@/constants/theme';
 import { api, errorMessage } from '@/lib/api';
+import { themedStyles, useColors } from '@/lib/appearance';
 import type { Message, Spark } from '@/lib/types';
 
 const POLL_MS = 3_000;
 
 export default function Chat() {
+  const colors = useColors();
+  const styles = useStyles();
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
   const [spark, setSpark] = useState<Spark | null>(null);
@@ -121,7 +124,7 @@ export default function Chat() {
           value={draft}
           onChangeText={setDraft}
           placeholder="say something..."
-          placeholderTextColor={Colors.textMuted}
+          placeholderTextColor={colors.textMuted}
           multiline
           maxLength={2000}
           style={styles.input}
@@ -138,10 +141,10 @@ export default function Chat() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((colors) => ({
   screen: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
   },
   list: {
     padding: Spacing.three,
@@ -155,17 +158,18 @@ const styles = StyleSheet.create({
   },
   mine: {
     alignSelf: 'flex-end',
-    backgroundColor: Colors.text,
+    backgroundColor: colors.text,
     borderBottomRightRadius: 6,
   },
+  // Your bubbles are the text color, so their words take the page color.
   mineText: {
-    color: Colors.ink,
+    color: colors.background,
   },
   theirs: {
     alignSelf: 'flex-start',
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: Colors.line,
+    borderColor: colors.line,
     borderBottomLeftRadius: 6,
   },
   starter: {
@@ -174,13 +178,13 @@ const styles = StyleSheet.create({
     marginVertical: Spacing.four,
     borderRadius: Radius.medium,
     borderWidth: 1,
-    borderColor: Colors.gold,
+    borderColor: colors.gold,
   },
   starterText: {
     fontFamily: Fonts.italic,
     fontSize: 25,
     lineHeight: 31,
-    color: Colors.text,
+    color: colors.text,
   },
   error: {
     textAlign: 'center',
@@ -197,11 +201,11 @@ const styles = StyleSheet.create({
     flex: 1,
     minHeight: 46,
     maxHeight: 120,
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderRadius: 23,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: Colors.line,
-    color: Colors.text,
+    borderColor: colors.line,
+    color: colors.text,
     fontFamily: Fonts.medium,
     fontSize: 18,
     paddingHorizontal: Spacing.three + 2,
@@ -212,4 +216,4 @@ const styles = StyleSheet.create({
     height: 46,
     paddingHorizontal: Spacing.three + 4,
   },
-});
+}));

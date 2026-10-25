@@ -1,10 +1,18 @@
 /**
  * Spark is a sparkler lit in the dark: a warm charcoal night, warm-white
- * type, graphite hairlines, and gold only where there's light. Nothing
- * casts a shadow or glows; light is gold strokes and color.
+ * type, graphite hairlines, and gold only where there's light. A daylight
+ * scheme puts the same sparkler on white. Nothing casts a shadow or glows.
  */
 
-export const Colors = {
+export type ColorScheme = 'dark' | 'light';
+
+/** The logo's own gold and charcoal, the same in both schemes. */
+export const Brand = {
+  gold: '#F5C94E',
+  charcoal: '#1E1E1C',
+};
+
+const dark = {
   background: '#141312',
   /** Deeper night behind the spark alert. */
   night: '#0E0D0C',
@@ -17,17 +25,45 @@ export const Colors = {
   textSecondary: '#A9A399',
   textMuted: '#7C766E',
   /** Text and icons drawn on gold. */
-  ink: '#1E1E1C',
-  gold: '#F5C94E',
-  /** The gold, under the name the notification and foreground-service tints use. */
-  yellow: '#F5C94E',
+  ink: Brand.charcoal,
+  /** Gold for fills and strokes. */
+  gold: Brand.gold,
+  /** Gold for text, which needs more contrast against a light page. */
+  accent: Brand.gold,
   danger: '#EE8C7E',
-} as const;
+};
 
-/** The logo's strokes, recolored for the dark: unlit is graphite, lit reads as light. */
-export const MarkColors = {
-  unlit: { ink: '#3A3734', gold: '#46423D', ash: '#2C2A27' },
-  lit: { stick: '#7F796F', ink: '#D2CABC', gold: Colors.gold, ash: '#A9A399' },
+/** Daylight: the logo's white page, charcoal type, the same gold. */
+const light: typeof dark = {
+  background: '#FFFFFF',
+  night: '#FFFFFF',
+  surface: '#F7F6F3',
+  surfaceRaised: '#EEECE7',
+  line: '#E3E1DB',
+  lineStrong: '#CBC8C0',
+  text: Brand.charcoal,
+  textSecondary: '#5C5C5A',
+  textMuted: '#8C8982',
+  ink: Brand.charcoal,
+  gold: Brand.gold,
+  accent: '#946B00',
+  danger: '#B3261E',
+};
+
+export type Palette = typeof dark;
+
+export const Palettes: Record<ColorScheme, Palette> = { dark, light };
+
+/** The logo's strokes per scheme: unlit is a faint sketch, lit reads as light. */
+export const MarkPalettes = {
+  dark: {
+    unlit: { ink: '#3A3734', gold: '#46423D', ash: '#2C2A27' },
+    lit: { stick: '#7F796F', ink: '#D2CABC', gold: Brand.gold, ash: '#A9A399' },
+  },
+  light: {
+    unlit: { ink: '#D8D5CE', gold: '#E4E1DA', ash: '#E9E7E1' },
+    lit: { stick: '#4A4845', ink: Brand.charcoal, gold: Brand.gold, ash: '#5C5C5A' },
+  },
 } as const;
 
 /** Crimson Pro, loaded in the root layout. Each weight is its own family. */

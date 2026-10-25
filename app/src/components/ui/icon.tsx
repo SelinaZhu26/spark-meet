@@ -2,7 +2,7 @@ import { MaterialSymbols_600SemiBold_Filled } from '@expo-google-fonts/material-
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import type { ColorValue, StyleProp, ViewStyle } from 'react-native';
 
-import { Colors } from '@/constants/theme';
+import { useColors } from '@/lib/appearance';
 
 /** Material Symbols' filled set, so Android and web match the iOS `.fill` symbols. */
 export const iconFont = {
@@ -36,12 +36,13 @@ export type IconProps = {
   style?: StyleProp<ViewStyle>;
 };
 
-export function Icon({ name, size = 24, color = Colors.text, style }: IconProps) {
+export function Icon({ name, size = 24, color, style }: IconProps) {
+  const colors = useColors();
   return (
     <SymbolView
       name={glyphs[name]}
       size={size}
-      tintColor={color}
+      tintColor={color ?? colors.text}
       weight={{ ios: 'semibold', android: iconFont }}
       style={style}
     />

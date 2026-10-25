@@ -1,17 +1,20 @@
 import { Link } from 'expo-router';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import { Avatar } from '@/components/ui/avatar';
 import { PressableScale } from '@/components/ui/pressable-scale';
 import { SparkMark } from '@/components/ui/spark-mark';
 import { AppText } from '@/components/ui/text';
-import { Colors, Fonts, MarkColors, Spacing } from '@/constants/theme';
+import { Fonts, Spacing } from '@/constants/theme';
+import { themedStyles, useAppearance } from '@/lib/appearance';
 import type { Spark } from '@/lib/types';
 
 const MARK = 46;
 
 /** Anonymous sparks get a little sparkler, lit while they're new; people you've met get their avatar. */
 export function SparkRow({ spark }: { spark: Spark }) {
+  const { marks } = useAppearance();
+  const styles = useStyles();
   const title = spark.other?.display_name ?? spark.shared_interests.slice(0, 2).join(', ');
   const status = spark.connected ? 'mutual' : spark.waved ? 'waved' : 'new';
   const fresh = !spark.waved && !spark.connected;
@@ -23,7 +26,7 @@ export function SparkRow({ spark }: { spark: Spark }) {
           {spark.other ? (
             <Avatar name={spark.other.display_name} url={spark.other.avatar_url} size={MARK} />
           ) : (
-            <SparkMark size={MARK} {...(fresh ? MarkColors.lit : MarkColors.unlit)} />
+            <SparkMark size={MARK} {...(fresh ? marks.lit : marks.unlit)} />
           )}
         </View>
         <View style={styles.text}>
@@ -49,7 +52,7 @@ export function SparkRow({ spark }: { spark: Spark }) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((colors) => ({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -79,7 +82,7 @@ const styles = StyleSheet.create({
     height: 5,
     borderRadius: 3,
     marginRight: Spacing.half,
-    backgroundColor: Colors.gold,
+    backgroundColor: colors.gold,
   },
   score: {
     flexDirection: 'row',
@@ -95,6 +98,6 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.italic,
     fontSize: 15,
     lineHeight: 22,
-    color: Colors.textMuted,
+    color: colors.textMuted,
   },
-});
+}));

@@ -1,8 +1,8 @@
-import { StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
+import { type StyleProp, type ViewStyle } from 'react-native';
 
 import { Icon, type IconName } from '@/components/ui/icon';
 import { PressableScale } from '@/components/ui/pressable-scale';
-import { Colors } from '@/constants/theme';
+import { themedStyles, useColors } from '@/lib/appearance';
 
 export type IconButtonProps = {
   icon: IconName;
@@ -20,10 +20,12 @@ export function IconButton({
   onPress,
   accessibilityLabel,
   size = 40,
-  color = Colors.surface,
-  iconColor = Colors.text,
+  color,
+  iconColor,
   style,
 }: IconButtonProps) {
+  const colors = useColors();
+  const styles = useStyles();
   return (
     <PressableScale
       accessibilityRole="button"
@@ -33,19 +35,24 @@ export function IconButton({
       pressedScale={0.9}
       style={[
         styles.base,
-        { width: size, height: size, borderRadius: size / 2, backgroundColor: color },
+        {
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+          backgroundColor: color ?? colors.surface,
+        },
         style,
       ]}>
-      <Icon name={icon} size={size * 0.48} color={iconColor} />
+      <Icon name={icon} size={size * 0.48} color={iconColor ?? colors.text} />
     </PressableScale>
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((colors) => ({
   base: {
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: Colors.lineStrong,
+    borderColor: colors.lineStrong,
   },
-});
+}));

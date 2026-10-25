@@ -4,7 +4,8 @@ import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-na
 
 import { SQUIGGLE_WIDTH, Squiggle } from '@/components/ui/squiggle';
 import { AppText } from '@/components/ui/text';
-import { Colors, Fonts, Spacing, Springs } from '@/constants/theme';
+import { Fonts, Spacing, Springs } from '@/constants/theme';
+import { useColors } from '@/lib/appearance';
 
 export type SegmentedOption<T extends string> = { value: T; label: string };
 
@@ -16,6 +17,7 @@ export type SegmentedProps<T extends string> = {
 
 /** A row of italic words; a gold squiggle slides under the picked one. */
 export function Segmented<T extends string>({ options, value, onChange }: SegmentedProps<T>) {
+  const colors = useColors();
   // Each label's center, measured, so the squiggle can sit under words of any length.
   const [centers, setCenters] = useState<Record<string, number>>({});
   const center = centers[value];
@@ -56,7 +58,7 @@ export function Segmented<T extends string>({ options, value, onChange }: Segmen
             }}
             hitSlop={8}
             style={styles.option}>
-            <AppText style={[styles.label, { color: selected ? Colors.text : Colors.textMuted }]}>
+            <AppText style={[styles.label, { color: selected ? colors.text : colors.textMuted }]}>
               {option.label}
             </AppText>
           </Pressable>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -9,11 +9,13 @@ import { Button } from '@/components/ui/button';
 import { rise } from '@/components/ui/rise';
 import { VIEW } from '@/components/ui/spark-mark';
 import { AppText } from '@/components/ui/text';
-import { Colors, Fonts, Spacing } from '@/constants/theme';
+import { Fonts, Spacing } from '@/constants/theme';
+import { themedStyles } from '@/lib/appearance';
 import { useMe } from '@/lib/session';
 import { useSparkSwitch } from '@/lib/spark-switch';
 
 export default function Home() {
+  const styles = useStyles();
   const { profile } = useMe();
   const { active, busy, mode, error, toggle } = useSparkSwitch();
   const tabBarSpace = useTabBarSpace();
@@ -87,10 +89,10 @@ export default function Home() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((colors) => ({
   screen: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
   },
   content: {
     flexGrow: 1,
@@ -126,7 +128,7 @@ const styles = StyleSheet.create({
     gap: Spacing.one,
   },
   dim: {
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
   },
   center: {
     textAlign: 'center',
@@ -139,4 +141,4 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     gap: Spacing.two,
   },
-});
+}));

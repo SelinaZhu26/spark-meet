@@ -1,12 +1,5 @@
 import { useEffect, useState, type Dispatch, type SetStateAction } from 'react';
-import {
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  TextInput,
-  View,
-} from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, TextInput, View } from 'react-native';
 import Animated, {
   FadeOut,
   SlideInLeft,
@@ -25,8 +18,9 @@ import { Icon, type IconName } from '@/components/ui/icon';
 import { IconButton } from '@/components/ui/icon-button';
 import { PressableScale } from '@/components/ui/pressable-scale';
 import { AppText } from '@/components/ui/text';
-import { Colors, Fonts, Radius, Spacing, Springs, alpha } from '@/constants/theme';
+import { Fonts, Radius, Spacing, Springs, alpha } from '@/constants/theme';
 import { api, errorMessage } from '@/lib/api';
+import { themedStyles, useColors } from '@/lib/appearance';
 import {
   SUGGESTED_INTERESTS,
   cleanInterest,
@@ -40,6 +34,7 @@ const STEPS = 4;
 const MIN_INTERESTS = 3;
 
 export default function Onboarding() {
+  const styles = useStyles();
   const { setMe } = useSession();
   const { profile } = useMe();
   const [step, setStep] = useState(0);
@@ -153,6 +148,7 @@ export default function Onboarding() {
 }
 
 function Progress({ step }: { step: number }) {
+  const styles = useStyles();
   return (
     <View accessibilityLabel={`Step ${step + 1} of ${STEPS}`} style={styles.dots}>
       {Array.from({ length: STEPS }, (_, index) => (
@@ -163,6 +159,8 @@ function Progress({ step }: { step: number }) {
 }
 
 function ProgressDot({ on }: { on: boolean }) {
+  const colors = useColors();
+  const styles = useStyles();
   const width = useSharedValue(on ? 30 : 18);
   useEffect(() => {
     width.set(withSpring(on ? 30 : 18, Springs.slide));
@@ -170,7 +168,7 @@ function ProgressDot({ on }: { on: boolean }) {
   const style = useAnimatedStyle(() => ({ width: width.get() }));
   return (
     <Animated.View
-      style={[styles.dot, { backgroundColor: on ? Colors.gold : Colors.lineStrong }, style]}
+      style={[styles.dot, { backgroundColor: on ? colors.gold : colors.lineStrong }, style]}
     />
   );
 }
@@ -184,6 +182,8 @@ function NameStep({
   onChange: (value: string) => void;
   onSubmit: () => void;
 }) {
+  const colors = useColors();
+  const styles = useStyles();
   return (
     <View style={styles.bottomStep}>
       <AppText variant="hero">what should we call you?</AppText>
@@ -191,7 +191,7 @@ function NameStep({
         value={value}
         onChangeText={onChange}
         placeholder="your first name"
-        placeholderTextColor={Colors.textMuted}
+        placeholderTextColor={colors.textMuted}
         maxLength={40}
         autoFocus
         autoComplete="given-name"
@@ -211,6 +211,8 @@ function InterestsStep({
   interests: string[];
   onChange: Dispatch<SetStateAction<string[]>>;
 }) {
+  const colors = useColors();
+  const styles = useStyles();
   const [custom, setCustom] = useState('');
   const has = (interest: string) => interests.some((existing) => sameInterest(existing, interest));
   const options = [
@@ -250,7 +252,7 @@ function InterestsStep({
         onChangeText={setCustom}
         onSubmitEditing={add}
         placeholder="add your own"
-        placeholderTextColor={Colors.textMuted}
+        placeholderTextColor={colors.textMuted}
         maxLength={40}
         returnKeyType="done"
         submitBehavior="submit"
@@ -268,6 +270,7 @@ type PoolsStepProps = {
 };
 
 function PoolsStep({ friends, dating, onFriends, onDating }: PoolsStepProps) {
+  const styles = useStyles();
   return (
     <View style={styles.bottomStep}>
       <AppText variant="hero">who are you looking for?</AppText>
@@ -295,6 +298,8 @@ function Option({
   selected: boolean;
   onPress: () => void;
 }) {
+  const colors = useColors();
+  const styles = useStyles();
   return (
     <PressableScale
       accessibilityRole="checkbox"
@@ -306,19 +311,21 @@ function Option({
         selected ? styles.optionOn : styles.optionOff,
         { transitionProperty: ['borderColor', 'backgroundColor'], transitionDuration: 220 },
       ]}>
-      <Icon name={icon} size={22} color={selected ? Colors.gold : Colors.textMuted} />
+      <Icon name={icon} size={22} color={selected ? colors.accent : colors.textMuted} />
       <AppText
-        style={[styles.optionLabel, { color: selected ? Colors.text : Colors.textSecondary }]}>
+        style={[styles.optionLabel, { color: selected ? colors.text : colors.textSecondary }]}>
         {label}
       </AppText>
       <View style={[styles.check, selected ? styles.checkOn : styles.checkOff]}>
-        {selected && <Icon name="check" size={16} color={Colors.ink} />}
+        {selected && <Icon name="check" size={16} color={colors.ink} />}
       </View>
     </PressableScale>
   );
 }
 
 function BioStep({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  const colors = useColors();
+  const styles = useStyles();
   return (
     <View style={styles.bottomStep}>
       <AppText variant="hero">anything else?</AppText>
@@ -326,7 +333,7 @@ function BioStep({ value, onChange }: { value: string; onChange: (value: string)
         value={value}
         onChangeText={onChange}
         placeholder="learning to climb, obsessed with film photography, always down for ramen"
-        placeholderTextColor={Colors.textMuted}
+        placeholderTextColor={colors.textMuted}
         maxLength={300}
         multiline
         style={[styles.input, styles.multiline]}
@@ -335,10 +342,10 @@ function BioStep({ value, onChange }: { value: string; onChange: (value: string)
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((colors) => ({
   screen: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
   },
   fill: {
     flex: 1,
@@ -394,8 +401,8 @@ const styles = StyleSheet.create({
   input: {
     height: 52,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.lineStrong,
-    color: Colors.text,
+    borderBottomColor: colors.lineStrong,
+    color: colors.text,
     fontFamily: Fonts.regular,
     fontSize: 19,
   },
@@ -407,7 +414,7 @@ const styles = StyleSheet.create({
   multiline: {
     height: 132,
     borderWidth: 1,
-    borderColor: Colors.line,
+    borderColor: colors.line,
     borderRadius: Radius.small,
     paddingHorizontal: Spacing.three - 2,
     paddingTop: Spacing.three - 4,
@@ -426,11 +433,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   optionOn: {
-    borderColor: Colors.gold,
-    backgroundColor: alpha(Colors.gold, 0.06),
+    borderColor: colors.gold,
+    backgroundColor: alpha(colors.gold, 0.06),
   },
   optionOff: {
-    borderColor: Colors.line,
+    borderColor: colors.line,
   },
   optionLabel: {
     flex: 1,
@@ -446,11 +453,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   checkOn: {
-    backgroundColor: Colors.gold,
+    backgroundColor: colors.gold,
   },
   checkOff: {
     borderWidth: 1.5,
-    borderColor: Colors.lineStrong,
+    borderColor: colors.lineStrong,
   },
   footer: {
     gap: Spacing.three - 4,
@@ -460,4 +467,4 @@ const styles = StyleSheet.create({
   center: {
     textAlign: 'center',
   },
-});
+}));

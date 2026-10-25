@@ -13,7 +13,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { HUB, SparkMark, VIEW, type Stroke } from '@/components/ui/spark-mark';
-import { Colors, MarkColors } from '@/constants/theme';
+import { useAppearance } from '@/lib/appearance';
 
 const isBody = (stroke: Stroke) => stroke.tone === 'ink';
 const isGoldRay = (stroke: Stroke) => stroke.part === 'ray' && stroke.tone === 'gold';
@@ -51,6 +51,7 @@ export type SparklerProps = {
 
 /** The logo as an illustration that ignites: gold rays flicker and pulse, specks drift off the hub. */
 export function Sparkler({ size, lit, style }: SparklerProps) {
+  const { colors, marks } = useAppearance();
   const width = (size * VIEW.width) / VIEW.height;
   // The hub's offset from the center, to scale layers around it.
   const hub = {
@@ -128,11 +129,11 @@ export function Sparkler({ size, lit, style }: SparklerProps) {
     transform: around(0.7 + heat.get() * 0.3 + pulse.get() * 0.06),
   }));
 
-  const mark = { size, ...MarkColors.lit };
+  const mark = { size, ...marks.lit };
   return (
     <View style={[styles.box, { width, height: size }, style]}>
       <Animated.View style={[StyleSheet.absoluteFill, unlitStyle]}>
-        <SparkMark size={size} {...MarkColors.unlit} />
+        <SparkMark size={size} {...marks.unlit} />
       </Animated.View>
       <Animated.View style={[StyleSheet.absoluteFill, bodyStyle]}>
         <SparkMark {...mark} show={isBody} />
@@ -156,7 +157,7 @@ export function Sparkler({ size, lit, style }: SparklerProps) {
           thickness={Math.max(1.5, size * 0.0065)}
           duration={speck.duration}
           delay={speck.delay}
-          color={speck.gold ? Colors.gold : Colors.text}
+          color={speck.gold ? colors.gold : colors.text}
           heat={heat}
           // A partly lit sparkler throws fewer specks.
           on={index < Math.round(lit * SPECKS.length)}

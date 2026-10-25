@@ -3,7 +3,7 @@ import Constants from 'expo-constants';
 import * as Device from 'expo-device';
 import { AppState, Platform } from 'react-native';
 
-import { Colors } from '@/constants/theme';
+import { Brand } from '@/constants/theme';
 import type { Spark } from '@/lib/types';
 
 export type NotificationData =
@@ -50,7 +50,7 @@ export async function setupNotifications(): Promise<string | null> {
       name: 'Sparks',
       importance: Notifications.AndroidImportance.MAX,
       vibrationPattern: [0, 120, 80, 120, 80, 240],
-      lightColor: Colors.yellow,
+      lightColor: Brand.gold,
     });
   }
   const { granted } = await Notifications.requestPermissionsAsync();

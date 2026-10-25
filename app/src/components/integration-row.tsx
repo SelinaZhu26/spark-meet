@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import { Button } from '@/components/ui/button';
 import { AppText } from '@/components/ui/text';
-import { Colors, Fonts, Spacing } from '@/constants/theme';
+import { Fonts, Spacing } from '@/constants/theme';
 import { api, errorMessage } from '@/lib/api';
+import { themedStyles } from '@/lib/appearance';
 import { connectIntegration, providerInfo } from '@/lib/integrations';
 import type { Integration, Provider } from '@/lib/types';
 
@@ -15,6 +16,7 @@ export type IntegrationRowProps = {
 };
 
 export function IntegrationRow({ provider, integration, onChanged }: IntegrationRowProps) {
+  const styles = useStyles();
   const info = providerInfo[provider];
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
@@ -63,7 +65,7 @@ export function IntegrationRow({ provider, integration, onChanged }: Integration
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((colors) => ({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -76,13 +78,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: Colors.lineStrong,
+    borderColor: colors.lineStrong,
   },
   logoText: {
     fontFamily: Fonts.regularItalic,
     fontSize: 22,
     lineHeight: 26,
-    color: Colors.text,
+    color: colors.text,
   },
   text: {
     flex: 1,
@@ -93,4 +95,4 @@ const styles = StyleSheet.create({
     fontSize: 18,
     lineHeight: 22,
   },
-});
+}));

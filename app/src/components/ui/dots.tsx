@@ -11,7 +11,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { Colors } from '@/constants/theme';
+import { useColors } from '@/lib/appearance';
 
 export type DotsProps = {
   color?: string;
@@ -19,14 +19,15 @@ export type DotsProps = {
 };
 
 /** The loading indicator: three dots bouncing in turn. */
-export function Dots({ color = Colors.text, size = 8 }: DotsProps) {
+export function Dots({ color, size = 8 }: DotsProps) {
+  const colors = useColors();
   return (
     <View
       accessibilityRole="progressbar"
       accessibilityLabel="Loading"
       style={[styles.row, { gap: size * 0.75, height: size * 2 }]}>
       {[0, 1, 2].map((index) => (
-        <Dot key={index} index={index} color={color} size={size} />
+        <Dot key={index} index={index} color={color ?? colors.text} size={size} />
       ))}
     </View>
   );

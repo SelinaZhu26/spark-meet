@@ -1,10 +1,11 @@
-import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { Dots } from '@/components/ui/dots';
 import { Icon, type IconName } from '@/components/ui/icon';
 import { PressableScale } from '@/components/ui/pressable-scale';
 import { AppText } from '@/components/ui/text';
-import { Colors, Fonts, Radius, Spacing } from '@/constants/theme';
+import { Fonts, Radius, Spacing } from '@/constants/theme';
+import { themedStyles, useColors } from '@/lib/appearance';
 
 export type ButtonProps = {
   title: string;
@@ -28,10 +29,12 @@ export function Button({
   icon,
   style,
 }: ButtonProps) {
+  const colors = useColors();
+  const styles = useStyles();
   const inactive = disabled || loading;
   // A disabled gold pill goes unlit: graphite with muted text, rather than a murky gold.
   const unlit = disabled && variant === 'primary';
-  const color = unlit ? Colors.textMuted : variant === 'primary' ? Colors.ink : Colors.text;
+  const color = unlit ? colors.textMuted : variant === 'primary' ? colors.ink : colors.text;
   const small = size === 'small';
 
   return (
@@ -60,7 +63,7 @@ export function Button({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((colors) => ({
   base: {
     height: 54,
     borderRadius: Radius.pill,
@@ -73,14 +76,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
   },
   primary: {
-    backgroundColor: Colors.gold,
+    backgroundColor: colors.gold,
   },
   ghost: {
     borderWidth: 1,
-    borderColor: Colors.lineStrong,
+    borderColor: colors.lineStrong,
   },
   unlit: {
-    backgroundColor: Colors.surfaceRaised,
+    backgroundColor: colors.surfaceRaised,
   },
   disabled: {
     opacity: 0.4,
@@ -99,4 +102,4 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 20,
   },
-});
+}));

@@ -7,7 +7,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PressableScale } from '@/components/ui/pressable-scale';
 import { SQUIGGLE_WIDTH, Squiggle } from '@/components/ui/squiggle';
 import { AppText } from '@/components/ui/text';
-import { Colors, Fonts, Spacing, Springs } from '@/constants/theme';
+import { Fonts, Spacing, Springs } from '@/constants/theme';
+import { themedStyles, useColors } from '@/lib/appearance';
 
 const BAR_HEIGHT = 58;
 
@@ -19,6 +20,8 @@ export function useTabBarSpace() {
 
 /** Italic words along the bottom edge; a gold squiggle slides under the focused tab. */
 export function TabBar({ state, descriptors, emitter, navigateToTab, insets }: BottomTabBarProps) {
+  const colors = useColors();
+  const styles = useStyles();
   const [width, setWidth] = useState(0);
   const segment = width / state.routes.length;
   const x = useSharedValue(0);
@@ -43,7 +46,7 @@ export function TabBar({ state, descriptors, emitter, navigateToTab, insets }: B
         {state.routes.map((route, index) => {
           const { options } = descriptors[route.key];
           const focused = index === state.index;
-          const color = focused ? Colors.text : Colors.textMuted;
+          const color = focused ? colors.text : colors.textMuted;
           const onPress = () => {
             const event = emitter.emit({
               type: 'tabPress',
@@ -80,18 +83,19 @@ export function TabBar({ state, descriptors, emitter, navigateToTab, insets }: B
 
 /** A gold speck beside a tab's name, e.g. while Spark is on. */
 export function TabSpeck() {
+  const styles = useStyles();
   return <View style={styles.speck} />;
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((colors) => ({
   bar: {
     position: 'absolute',
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: Colors.line,
+    borderTopColor: colors.line,
   },
   tabs: {
     height: BAR_HEIGHT,
@@ -120,6 +124,6 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: Colors.gold,
+    backgroundColor: colors.gold,
   },
-});
+}));

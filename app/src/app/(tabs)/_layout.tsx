@@ -1,10 +1,12 @@
 import { Tabs } from 'expo-router/js-tabs';
 
 import { TabBar, TabSpeck } from '@/components/tab-bar';
-import { Colors } from '@/constants/theme';
+
+import { useColors } from '@/lib/appearance';
 import { useMe } from '@/lib/session';
 
 export default function TabLayout() {
+  const colors = useColors();
   const { profile } = useMe();
   return (
     <Tabs
@@ -12,7 +14,7 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         animation: 'fade',
-        sceneStyle: { backgroundColor: Colors.background },
+        sceneStyle: { backgroundColor: colors.background },
       }}>
       <Tabs.Screen
         name="index"

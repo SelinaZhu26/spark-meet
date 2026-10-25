@@ -1,10 +1,11 @@
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import { Button, type ButtonProps } from '@/components/ui/button';
 import { Dots } from '@/components/ui/dots';
 import { SparkMark } from '@/components/ui/spark-mark';
 import { AppText } from '@/components/ui/text';
-import { Colors, MarkColors, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
+import { themedStyles, useAppearance } from '@/lib/appearance';
 
 export type StatusScreenProps = {
   title?: string;
@@ -14,11 +15,13 @@ export type StatusScreenProps = {
 
 /** Full-screen loading or error state. Shows the loader when there's no title. */
 export function StatusScreen({ title, message, actions = [] }: StatusScreenProps) {
+  const { colors, marks } = useAppearance();
+  const styles = useStyles();
   return (
     <View style={styles.screen}>
       {title ? (
         <>
-          <SparkMark size={88} {...MarkColors.unlit} />
+          <SparkMark size={88} {...marks.unlit} />
           <AppText variant="title" style={styles.center}>
             {title}
           </AppText>
@@ -32,20 +35,20 @@ export function StatusScreen({ title, message, actions = [] }: StatusScreenProps
           ))}
         </>
       ) : (
-        <Dots color={Colors.gold} size={10} />
+        <Dots color={colors.gold} size={10} />
       )}
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((colors) => ({
   screen: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.three,
     padding: Spacing.four,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
   },
   center: {
     textAlign: 'center',
@@ -53,4 +56,4 @@ const styles = StyleSheet.create({
   button: {
     alignSelf: 'stretch',
   },
-});
+}));

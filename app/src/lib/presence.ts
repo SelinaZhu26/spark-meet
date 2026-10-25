@@ -12,7 +12,7 @@ import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
 import { AppState } from 'react-native';
 
-import { Colors } from '@/constants/theme';
+import { Brand } from '@/constants/theme';
 import { ApiError, api } from '@/lib/api';
 import { notifySpark } from '@/lib/notifications';
 import type { Spark } from '@/lib/types';
@@ -175,7 +175,7 @@ async function startBackgroundUpdates(prompt: boolean): Promise<PresenceMode> {
         foregroundService: {
           notificationTitle: 'Spark is on',
           notificationBody: "We'll buzz you when someone you'd click with is near.",
-          notificationColor: Colors.yellow,
+          notificationColor: Brand.gold,
         },
       });
     }

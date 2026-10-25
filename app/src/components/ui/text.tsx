@@ -1,6 +1,7 @@
 import { StyleSheet, Text, type TextProps } from 'react-native';
 
-import { Colors, Fonts } from '@/constants/theme';
+import { Fonts, type Palette } from '@/constants/theme';
+import { useColors } from '@/lib/appearance';
 
 export type AppTextProps = TextProps & {
   variant?: 'hero' | 'title' | 'heading' | 'body' | 'caption' | 'label';
@@ -8,17 +9,18 @@ export type AppTextProps = TextProps & {
 };
 
 export function AppText({ style, variant = 'body', tone = 'default', ...rest }: AppTextProps) {
-  return <Text style={[styles[variant], { color: tones[tone] }, style]} {...rest} />;
+  const colors = useColors();
+  return <Text style={[styles[variant], { color: colors[tones[tone]] }, style]} {...rest} />;
 }
 
 const tones = {
-  default: Colors.text,
-  secondary: Colors.textSecondary,
-  muted: Colors.textMuted,
-  accent: Colors.gold,
-  danger: Colors.danger,
-  ink: Colors.ink,
-} as const;
+  default: 'text',
+  secondary: 'textSecondary',
+  muted: 'textMuted',
+  accent: 'accent',
+  danger: 'danger',
+  ink: 'ink',
+} as const satisfies Record<string, keyof Palette>;
 
 const styles = StyleSheet.create({
   hero: {

@@ -9,11 +9,15 @@ import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { rise } from '@/components/ui/rise';
+import { Segmented } from '@/components/ui/segmented';
 import { AppText } from '@/components/ui/text';
-import { Colors, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
+import { themedStyles, useAppearance } from '@/lib/appearance';
 import { useMe, useSession } from '@/lib/session';
 
 export default function Profile() {
+  const styles = useStyles();
+  const { scheme, setScheme } = useAppearance();
   const { setMe, refreshMe, signOut } = useSession();
   const { profile, integrations, available_integrations } = useMe();
   const tabBarSpace = useTabBarSpace();
@@ -71,6 +75,20 @@ export default function Profile() {
           />
         </Animated.View>
 
+        <Animated.View entering={rise(3)} style={styles.section}>
+          <AppText variant="label" tone="secondary" style={styles.sectionTitle}>
+            look
+          </AppText>
+          <Segmented
+            options={[
+              { value: 'dark', label: 'dark' },
+              { value: 'light', label: 'light' },
+            ]}
+            value={scheme}
+            onChange={setScheme}
+          />
+        </Animated.View>
+
         <Button
           title="sign out"
           variant="ghost"
@@ -83,10 +101,10 @@ export default function Profile() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((colors) => ({
   screen: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
   },
   content: {
     paddingHorizontal: Spacing.four - 4,
@@ -109,11 +127,11 @@ const styles = StyleSheet.create({
   },
   divider: {
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: Colors.line,
+    borderTopColor: colors.line,
     paddingTop: Spacing.three,
   },
   signOut: {
     alignSelf: 'center',
     minWidth: 140,
   },
-});
+}));

@@ -13,8 +13,9 @@ import Animated, {
 import Svg, { Defs, LinearGradient, Path, Stop } from 'react-native-svg';
 
 import { Speck } from '@/components/sparkler';
-import { Colors, MarkColors } from '@/constants/theme';
+
 import { seedOf } from '@/lib/seed';
+import { useAppearance } from '@/lib/appearance';
 
 const RAYS = 22;
 const SPECKS = 16;
@@ -36,7 +37,13 @@ function random(seed: number) {
  * off the screen, and short gold and ash ones close in. Each is an S-curve. They start on
  * an ellipse around the hub, taller than wide, to keep the text above and below it clear.
  */
-function makeRays(seed: number, hub: Point, reach: number, core: number): Ray[] {
+function makeRays(
+  seed: number,
+  hub: Point,
+  reach: number,
+  core: number,
+  tones: { gold: string; light: string; ash: string }
+): Ray[] {
   const rand = random(seed);
   return Array.from({ length: RAYS }, (_, index) => {
     const short = index % 3 === 2;
@@ -63,11 +70,11 @@ function makeRays(seed: number, hub: Point, reach: number, core: number): Ray[] 
       width: short ? 2.5 : rand(4, 7.5),
       color: short
         ? index % 2
-          ? Colors.gold
-          : MarkColors.lit.ash
+          ? tones.gold
+          : tones.ash
         : index % 4 === 0
-          ? Colors.text
-          : Colors.gold,
+          ? tones.light
+          : tones.gold,
     };
   });
 }
@@ -84,8 +91,13 @@ export type SparkBurstProps = {
 
 /** Gold strokes bursting across the screen from the hub, then flickering, with specks flying off. */
 export function SparkBurst({ width, height, hub, core, seed }: SparkBurstProps) {
+  const { colors, marks } = useAppearance();
   const reach = Math.hypot(Math.max(hub.x, width - hub.x), Math.max(hub.y, height - hub.y));
-  const rays = makeRays(seedOf(seed), hub, reach, core);
+  const rays = makeRays(seedOf(seed), hub, reach, core, {
+    gold: colors.gold,
+    light: colors.text,
+    ash: marks.lit.ash,
+  });
   // The hub's offset from the center, to scale around it.
   const offset = { x: hub.x - width / 2, y: hub.y - height / 2 };
 
@@ -207,7 +219,7 @@ export function SparkBurst({ width, height, hub, core, seed }: SparkBurstProps) 
           thickness={2.5}
           duration={1600 + (index % 5) * 260}
           delay={900 + index * 110}
-          color={index % 4 === 0 ? Colors.text : Colors.gold}
+          color={index % 4 === 0 ? colors.text : colors.gold}
           heat={grow}
           on
         />
